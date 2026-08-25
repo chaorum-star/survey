@@ -1,0 +1,834 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>차팀장 AI 직원 진단</title>
+<style>
+
+:root{
+  --canvas:#f3f0eb;
+  --surface:#fbfaf8;
+  --surface-2:#f7f4ef;
+  --ink:#171615;
+  --muted:#77716b;
+  --line:#dcd6cf;
+  --line-strong:#bdb6ae;
+  --accent:#ef6b3e;
+  --accent-soft:#fff0e9;
+  --violet:#6755cf;
+  --green:#25745c;
+  --green-soft:#edf6f1;
+  --warn:#9a5b35;
+  --radius-sm:8px;
+  --radius-md:14px;
+  --radius-lg:20px;
+  --space:8px;
+}
+*{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%}
+body{
+  margin:0;min-height:100vh;background:var(--canvas);color:var(--ink);
+  font-family:-apple-system,BlinkMacSystemFont,"Pretendard","Apple SD Gothic Neo","Noto Sans KR",sans-serif;
+  letter-spacing:-.012em;
+}
+button,input,textarea,select{font:inherit}
+button{touch-action:manipulation}
+a{color:inherit}
+.app{min-height:100vh}
+.top{position:sticky;top:0;z-index:30;background:rgba(243,240,235,.94);backdrop-filter:blur(12px);border-bottom:1px solid rgba(23,22,21,.06)}
+.topin{max-width:980px;margin:auto;padding:14px 22px 12px}
+.brandrow{display:flex;align-items:center;gap:10px}
+.logo{width:28px;height:28px;border-radius:8px;background:var(--ink);color:white;display:grid;place-items:center;font-size:12px;font-weight:900}
+.brand{font-size:13px;font-weight:850;letter-spacing:-.02em}
+.progress{height:3px;background:#dfd9d2;margin-top:12px;overflow:hidden}
+.progress>i{display:block;height:100%;width:0;background:var(--accent);transition:width .22s ease}
+.wrap{max-width:980px;margin:auto;padding:40px 22px 72px}
+.card{background:transparent;padding:0;min-height:560px}
+.footer{border-top:1px solid var(--line);margin-top:46px;padding-top:16px;font-size:11px;color:#918a83;line-height:1.6}
+.eyebrow{font-size:11px;font-weight:850;letter-spacing:.08em;text-transform:uppercase;color:var(--accent);margin-bottom:18px}
+h1,h2,h3,p{margin-top:0}
+h1{font-size:clamp(44px,7vw,76px);line-height:.99;letter-spacing:-.072em;margin-bottom:24px;font-weight:850}
+h2{font-size:clamp(34px,5.2vw,52px);line-height:1.06;letter-spacing:-.055em;margin-bottom:18px;font-weight:820}
+h3{font-size:21px;line-height:1.22;letter-spacing:-.035em}
+.lead{font-size:18px;line-height:1.7;color:#4e4945;max-width:650px}
+.sub{font-size:14px;line-height:1.7;color:var(--muted);max-width:680px}
+.note,.microcta,.resultintro,.carryover{padding:15px 0;border-top:1px solid var(--line);border-bottom:1px solid var(--line);font-size:13px;line-height:1.65;color:#5f5954;margin-top:22px}
+.note b,.microcta b,.resultintro b,.carryover b{color:var(--ink)}
+.field{margin:30px 0 20px;max-width:720px}
+.field input,.field textarea{width:100%;border:0;border-bottom:2px solid var(--line-strong);background:transparent;border-radius:0;padding:12px 0 14px;outline:0;font-size:20px;color:var(--ink)}
+.field input::placeholder,.field textarea::placeholder{color:#aaa39c}
+.field input:focus,.field textarea:focus{border-bottom-color:var(--ink)}
+.field textarea{min-height:120px;resize:vertical}
+.choices{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:0 28px;margin-top:28px;border-top:1px solid var(--line)}
+.choice{width:100%;text-align:left;border:0;border-bottom:1px solid var(--line);background:transparent;color:var(--ink);padding:18px 2px;display:flex;align-items:center;justify-content:space-between;gap:14px;cursor:pointer;transition:.14s ease}
+.choice:hover{padding-left:8px}
+.choice.selected{color:var(--ink);font-weight:800}
+.choice b{font-size:16px;font-weight:700}.choice small{display:block;color:var(--muted);font-size:12px;line-height:1.45;margin-top:4px;font-weight:500}
+.dot{width:22px;height:22px;border-radius:50%;border:1px solid var(--line-strong);display:grid;place-items:center;flex:none;font-size:11px;color:transparent}
+.choice.selected .dot{background:var(--ink);border-color:var(--ink);color:white}
+.actions{display:flex;align-items:center;gap:10px;margin-top:34px;flex-wrap:wrap}
+.btn{border:1px solid var(--ink);border-radius:10px;padding:14px 18px;font-weight:800;min-height:50px;cursor:pointer;background:transparent;color:var(--ink);transition:.14s ease}
+.btn:hover{transform:translateY(-1px)}
+.btn.main{background:var(--ink);color:white;flex:1;max-width:420px}
+.btn.orange{background:var(--accent);border-color:var(--accent);color:white;flex:1;max-width:460px}
+.btn.soft{border-color:var(--line-strong);color:#59534e;background:transparent}
+.btn:disabled{opacity:.28;cursor:not-allowed;transform:none}
+.home{display:grid;grid-template-columns:minmax(0,1.2fr) minmax(320px,.8fr);gap:68px;align-items:end;min-height:620px}
+.home-copy{padding-bottom:18px}
+.home-copy .lead{max-width:600px}
+.home-kicker{display:flex;gap:22px;margin-top:38px;padding-top:18px;border-top:1px solid var(--line)}
+.home-kicker div{max-width:180px}.home-kicker b{display:block;font-size:12px;margin-bottom:5px}.home-kicker span{font-size:11px;color:var(--muted);line-height:1.45}
+.modecards{border-top:1px solid var(--ink)}
+.modecard{display:grid;grid-template-columns:52px 1fr 22px;gap:14px;align-items:start;text-decoration:none;padding:22px 0;border-bottom:1px solid var(--line);transition:.15s ease}
+.modecard:hover{padding-left:8px}.modecard .tag{grid-column:2;font-size:11px;color:var(--muted);font-weight:700}.modecard h2{grid-column:2;font-size:27px;line-height:1.15;margin:4px 0 8px}.modecard p{grid-column:2;font-size:13px;color:var(--muted);line-height:1.55;margin:0}.modecard .go{grid-column:3;grid-row:1/5;font-size:22px;align-self:center}.mode-num{grid-column:1;grid-row:1/5;font-size:12px;color:var(--muted);padding-top:2px}.modecard.primary h2{color:var(--accent)}
+.suggestwrap{margin:28px 0 8px;border-top:1px solid var(--line)}
+.suggesttitle{font-size:12px;font-weight:800;color:#5d5752;padding:14px 0 10px}
+.suggestions{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:0 24px}
+.suggestchip{border:0;border-bottom:1px solid var(--line);background:transparent;text-align:left;padding:13px 2px;font-size:13px;color:#4b4642;cursor:pointer;display:flex;align-items:center;justify-content:space-between;gap:8px}
+.suggestchip::after{content:'+';font-size:17px;color:#9b948d}.suggestchip.selected{font-weight:800;color:var(--ink)}.suggestchip.selected::after{content:'✓';color:var(--accent)}
+.selectionstatus{display:flex;align-items:flex-end;justify-content:space-between;gap:16px;margin:24px 0 0;padding-bottom:12px;border-bottom:2px solid var(--ink)}
+.selectionstatus b{font-size:20px}.selectionstatus span{font-size:12px;color:var(--muted)}
+.selectedlist{display:flex;flex-wrap:wrap;gap:8px;margin:14px 0}
+.selectedtask{border:1px solid var(--line);background:transparent;color:#4c4742;border-radius:8px;padding:8px 10px;font-size:12px;font-weight:700}.selectedtask span{margin-left:5px;color:#9d958f}
+.helperline,.limitwarn,.keyhint,.nexttaskhint{font-size:12px;line-height:1.55}.helperline{color:var(--muted);margin-top:12px}.limitwarn{color:var(--warn);font-weight:750;margin-top:10px}
+.pills{display:flex;flex-wrap:wrap;gap:7px;margin:12px 0}.pill{font-size:11px;border:1px solid var(--line);border-radius:7px;padding:6px 8px;background:transparent}
+.carrychip{display:inline-block;font-size:11px;font-weight:800;color:var(--violet);margin-bottom:8px}.carryover strong{display:block;font-size:20px;margin:3px 0}.carryover span{font-size:13px;color:var(--muted)}
+.taskjourney{display:flex;gap:0;overflow-x:auto;margin:0 0 28px;border-bottom:1px solid var(--line);scrollbar-width:none}.taskjourney::-webkit-scrollbar{display:none}
+.taskstep{flex:none;display:flex;align-items:center;gap:7px;padding:11px 16px 11px 0;margin-right:18px;font-size:11px;color:#9a938c;max-width:180px}.taskstep .stepnum{width:18px;height:18px;border-radius:50%;border:1px solid var(--line-strong);display:grid;place-items:center;font-size:9px;flex:none}.taskstep.current{color:var(--ink);font-weight:800}.taskstep.current .stepnum{background:var(--ink);border-color:var(--ink);color:white}.taskstep.done{color:var(--green)}.taskstep.done .stepnum{border-color:var(--green);color:var(--green)}.taskstep .stepname{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.taskcontext{display:grid;grid-template-columns:160px 1fr;gap:26px;margin-bottom:30px;padding-bottom:22px;border-bottom:1px solid var(--line)}
+.taskmeta{display:flex;flex-direction:column;gap:8px}.taskbadge,.questionbadge{font-size:11px;color:var(--muted)}.tasklabel{font-size:11px;color:var(--muted);font-weight:700;margin-bottom:5px}.taskname{font-size:23px;line-height:1.28;font-weight:820;letter-spacing:-.04em}.taskchange{font-size:12px;color:var(--green);font-weight:700;margin-top:8px}
+.contextquestion{font-size:clamp(34px,5vw,54px);line-height:1.06;letter-spacing:-.057em;margin-bottom:22px}.contextquestion .taskinline{color:var(--accent)}
+.keyhint{color:#918a83;margin-top:14px}.keyhint kbd{border:1px solid var(--line-strong);border-bottom-width:2px;border-radius:5px;background:transparent;padding:3px 7px;font-size:10px;font-weight:800;color:#5f5954}
+.nexttaskhint{color:var(--muted);margin-top:10px}
+.resultHero{display:grid;grid-template-columns:minmax(0,1.2fr) minmax(240px,.8fr);gap:44px;align-items:end;padding-bottom:30px;border-bottom:2px solid var(--ink);margin-bottom:26px}.resultHero h2{margin-bottom:12px}.resultHero p{font-size:13px;color:var(--muted);line-height:1.6;margin:0}.score{font-size:68px;line-height:.9;font-weight:850;letter-spacing:-.07em;color:var(--accent)}
+.resultintro{margin:0 0 30px;padding:0 0 22px;border-top:0}
+.resultintro p{font-size:13px;color:var(--muted);line-height:1.65;margin:5px 0 0}
+.portfolio{margin:38px 0 44px}.portfoliohead{display:grid;grid-template-columns:180px 1fr;gap:24px;margin-bottom:18px}.portfoliohead h3{margin:0}.portfoliohead p{font-size:12px;color:var(--muted);line-height:1.55;margin:0;max-width:600px}
+.matrix{position:relative;height:390px;border-left:1px solid var(--ink);border-bottom:1px solid var(--ink);background:linear-gradient(to right,transparent 49.8%,var(--line) 50%,transparent 50.2%),linear-gradient(to top,transparent 49.8%,var(--line) 50%,transparent 50.2%)}
+.matrix::before{content:'시스템화 준비도 →';position:absolute;left:50%;bottom:-30px;transform:translateX(-50%);font-size:11px;color:var(--muted)}
+.matrix::after{content:'효과 잠재력 →';position:absolute;left:-54px;top:50%;transform:rotate(-90deg) translateX(-50%);transform-origin:left top;font-size:11px;color:var(--muted)}
+.quadlabel{position:absolute;font-size:11px;color:#9b948d;line-height:1.4}.quadlabel b{display:block;color:#5f5954;font-size:12px}.ql-q{right:14px;top:14px}.ql-f{left:14px;top:14px}.ql-e{right:14px;bottom:14px}.ql-l{left:14px;bottom:14px}
+.plotdot{position:absolute;width:28px;height:28px;border-radius:50%;background:var(--surface);border:2px solid var(--ink);display:grid;place-items:center;font-size:10px;font-weight:850;transform:translate(-50%,50%);z-index:3}.plotdot.top{background:var(--accent);border-color:var(--accent);color:white}.plotdot.quick{border-color:var(--green);color:var(--green)}
+.plotlegend{margin-top:38px;border-top:1px solid var(--line)}.legendrow{display:grid;grid-template-columns:34px 1fr 80px 80px;gap:10px;padding:11px 0;border-bottom:1px solid var(--line);align-items:center;font-size:12px}.legendrow b{font-size:13px}.legendrow span{color:var(--muted)}.legendnum{font-weight:850}
+.results{margin-top:34px;border-top:2px solid var(--ink)}
+.resultCard{display:grid;grid-template-columns:56px minmax(0,1fr) 92px;gap:18px;padding:26px 0;border-bottom:1px solid var(--line);background:transparent}.num{font-size:13px;color:var(--muted);font-weight:800}.rankmain h3{margin:0 0 5px;font-size:22px}.rankmain p{font-size:13px;color:var(--muted);line-height:1.55;margin:0}.priority{font-size:30px;text-align:right;font-weight:850;letter-spacing:-.04em}.typebadge{display:inline-block;margin-top:11px;font-size:11px;font-weight:800;color:var(--accent)}
+.axisgrid{grid-column:2/4;display:grid;grid-template-columns:repeat(3,1fr);gap:0;border-top:1px solid var(--line);margin-top:4px}.axis{padding:14px 0 0}.axis+.axis{padding-left:18px;border-left:1px solid var(--line)}.axis b{display:block;font-size:10px;color:var(--muted);margin-bottom:4px}.axis strong{font-size:20px}.axis small{display:block;font-size:10px;color:#9b948d;margin-top:3px}
+.reasonbox{grid-column:2/4;margin-top:4px}.reasonrow{display:grid;grid-template-columns:90px 1fr;gap:12px;padding:7px 0;font-size:12px;line-height:1.55}.reasonrow b{font-weight:800}.reasonrow span{color:var(--muted)}
+.nextaction{margin-top:40px;padding:28px 0;border-top:2px solid var(--ink);border-bottom:1px solid var(--line)}.nextaction h3{font-size:31px;max-width:720px;margin-bottom:10px}.nextaction p{font-size:13px;color:var(--muted);line-height:1.65;max-width:720px}
+.cta{margin-top:28px;padding-left:22px;border-left:3px solid var(--accent)}.cta h3{margin-bottom:8px}.cta p{font-size:13px;color:var(--muted);line-height:1.65;margin:0}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:0;border-top:1px solid var(--line);margin-top:14px}.mini{padding:13px 0}.mini+.mini{padding-left:18px;border-left:1px solid var(--line)}.mini b{display:block;font-size:10px;color:var(--muted);margin-bottom:4px}.mini span{font-size:14px;font-weight:800}.bar{height:3px;background:#ded8d1;margin:14px 0}.bar i{display:block;height:100%;background:var(--accent)}
+@media(max-width:760px){
+  .wrap{padding:28px 16px 56px}.topin{padding-left:16px;padding-right:16px}.card{min-height:0}.home{grid-template-columns:1fr;gap:34px;min-height:0}.home-kicker{gap:14px}.choices,.suggestions{grid-template-columns:1fr}.taskcontext{grid-template-columns:1fr;gap:10px}.taskmeta{flex-direction:row}.resultHero{grid-template-columns:1fr;gap:18px}.portfoliohead{grid-template-columns:1fr;gap:5px}.matrix{height:330px}.matrix::after{left:-48px}.resultCard{grid-template-columns:42px 1fr 68px}.axisgrid,.reasonbox{grid-column:1/4;margin-left:42px}.legendrow{grid-template-columns:28px 1fr 58px 58px}.modecard{grid-template-columns:40px 1fr 18px}.modecard h2{font-size:24px}
+}
+@media(max-width:460px){
+  h1{font-size:43px}.lead{font-size:16px}.home-kicker{display:grid;grid-template-columns:1fr 1fr}.actions{align-items:stretch}.btn{width:100%;max-width:none!important}.resultCard{grid-template-columns:34px 1fr 54px;gap:10px}.priority{font-size:24px}.axisgrid,.reasonbox{margin-left:34px}.axisgrid{grid-template-columns:1fr}.axis+.axis{padding-left:0;border-left:0;border-top:1px solid var(--line);padding-top:12px;margin-top:12px}.matrix{height:300px}.quadlabel{font-size:9px}.quadlabel b{font-size:10px}
+}
+
+
+
+/* v11 — interactive dashboard affordance layer */
+:root{
+  --canvas:#f5f3fa;
+  --surface:#ffffff;
+  --surface-2:#faf9fd;
+  --ink:#211a36;
+  --muted:#777184;
+  --line:#e3dfee;
+  --line-strong:#cfc7df;
+  --accent:#6e4bd8;
+  --accent-soft:#f0ebff;
+  --violet:#6e4bd8;
+  --green:#3f9b78;
+  --green-soft:#edf8f3;
+  --warn:#ef7550;
+  --radius-sm:10px;
+  --radius-md:14px;
+  --radius-lg:18px;
+}
+body{background:linear-gradient(180deg,#f8f7fc 0,#f3f1f8 100%)}
+.top{background:rgba(248,247,252,.92);border-bottom:1px solid #e8e3ef;box-shadow:0 1px 0 rgba(33,26,54,.02)}
+.logo{background:linear-gradient(135deg,#7250dc,#5e3cc1);box-shadow:0 6px 16px rgba(110,75,216,.18)}
+.progress{height:5px;border-radius:999px;background:#e9e4f1}
+.progress>i{background:linear-gradient(90deg,#6e4bd8,#8b71e3);border-radius:999px}
+.wrap{max-width:1040px;padding-top:26px}
+.card{background:#fff;border:1px solid #ebe7f0;border-radius:22px;padding:34px;min-height:560px;box-shadow:0 12px 34px rgba(68,54,96,.06)}
+.footer{border-top:0;text-align:center;color:#9991a3}
+.eyebrow{display:inline-flex;align-items:center;background:#f3efff;color:#6b49cc;border:1px solid #e1d9fb;border-radius:999px;padding:6px 9px;margin-bottom:16px;font-size:10px;letter-spacing:.055em}
+h1{font-size:clamp(42px,6.2vw,68px)}
+h2{font-size:clamp(31px,4.4vw,45px)}
+.lead{color:#5d5765}
+.note,.microcta,.resultintro,.carryover{border:1px solid #e8e2f1;background:#fbfaff;border-radius:14px;padding:15px 16px;margin-top:20px}
+.field{margin:24px 0 18px;max-width:none}
+.field input,.field textarea{border:1.5px solid #ddd7e8;border-radius:13px;padding:15px 16px;background:#fff;font-size:16px;box-shadow:0 2px 7px rgba(48,37,70,.03)}
+.field input:focus,.field textarea:focus{border-color:#7a5bd7;box-shadow:0 0 0 3px rgba(110,75,216,.10)}
+
+/* start mode: actual clickable launch cards */
+.home{grid-template-columns:minmax(0,1fr) minmax(360px,.92fr);gap:46px;align-items:center;min-height:570px}
+.home-kicker{border-top:0;gap:10px;margin-top:28px;padding-top:0}
+.home-kicker div{max-width:none;background:#faf9fd;border:1px solid #e8e3ef;border-radius:12px;padding:12px 14px;flex:1}
+.home-kicker b{color:#4b3e72}.home-kicker span{color:#81798b}
+.modecards{border-top:0;display:grid;gap:12px}
+.modecard{display:grid;grid-template-columns:42px 1fr auto;gap:14px;align-items:center;padding:19px;border:1.5px solid #ded8e9;border-radius:17px;background:#fff;box-shadow:0 5px 16px rgba(65,52,92,.05);transition:.18s ease}
+.modecard:hover{padding-left:19px;transform:translateY(-2px);border-color:#bcaee3;box-shadow:0 10px 24px rgba(75,56,115,.10)}
+.modecard.primary{background:linear-gradient(180deg,#f7f3ff,#fff);border-color:#cdbff1}
+.modecard .tag{grid-column:2;font-size:10px;color:#7f768b}
+.modecard h2{grid-column:2;font-size:24px;margin:2px 0 6px;color:#2c2247}
+.modecard.primary h2{color:#5e3dc1}
+.modecard p{grid-column:2;font-size:12px}
+.mode-num{grid-column:1;grid-row:1/5;width:32px;height:32px;border-radius:10px;background:#f1edfb;color:#6748c7;display:grid;place-items:center;padding:0;font-weight:850}
+.modecard .go{grid-column:3;grid-row:1/5;font-size:0;align-self:center;background:#6e4bd8;color:#fff;border-radius:10px;padding:10px 12px;font-weight:850;box-shadow:0 5px 12px rgba(110,75,216,.20)}
+.modecard .go::after{content:'시작 →';font-size:11px}
+.modecard:not(.primary) .go{background:#fff;color:#655c70;border:1px solid #ddd6e8;box-shadow:none}
+
+/* selectable controls should look selectable */
+.choices{grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;margin-top:24px;border-top:0}
+.choice{border:1.5px solid #ded8e8;border-radius:14px;background:#fff;padding:16px;box-shadow:0 3px 10px rgba(59,47,85,.035);transition:.16s ease;min-height:66px}
+.choice:hover{padding-left:16px;border-color:#bcaee2;box-shadow:0 7px 16px rgba(69,52,105,.07);transform:translateY(-1px)}
+.choice.selected{border-color:#7558d4;background:#f2edff;color:#4e35a8;box-shadow:0 0 0 2px rgba(110,75,216,.08)}
+.choice b{font-size:15px}.choice small{color:#827b89}
+.dot{width:24px;height:24px;border-radius:8px;border:1.5px solid #c9c0d6;background:#faf9fc}
+.choice.selected .dot{background:#6e4bd8;border-color:#6e4bd8;color:#fff}
+
+/* CTA hierarchy */
+.actions{gap:10px;margin-top:28px}
+.btn{border:1.5px solid #d8d1e2;border-radius:12px;padding:14px 18px;min-height:50px;background:#fff;color:#51495c;box-shadow:0 3px 9px rgba(57,43,85,.04)}
+.btn:hover{transform:translateY(-1px);box-shadow:0 7px 15px rgba(57,43,85,.08)}
+.btn.main,.btn.orange{background:linear-gradient(135deg,#7556da,#6542c8);border-color:#6542c8;color:#fff;box-shadow:0 8px 16px rgba(110,75,216,.20)}
+.btn.soft{background:#fff;border-color:#ddd6e7;color:#635c69}
+.btn:disabled{background:#eeeaf2;border-color:#eeeaf2;color:#aaa4b0;box-shadow:none}
+
+/* multi-select as task buttons */
+.suggestwrap{margin:24px 0 12px;border-top:0;background:#faf9fc;border:1px solid #ebe7f0;border-radius:15px;padding:14px}
+.suggesttitle{padding:0 0 11px;color:#69616f}
+.suggestions{gap:9px 10px}
+.suggestchip{border:1.5px solid #ddd7e7;border-radius:11px;background:#fff;padding:11px 12px;box-shadow:0 2px 7px rgba(59,47,85,.035);transition:.14s ease}
+.suggestchip:hover{border-color:#bbaee1;transform:translateY(-1px)}
+.suggestchip::after{width:22px;height:22px;border-radius:7px;background:#f3f0f7;display:grid;place-items:center;font-size:14px;color:#8d8594}
+.suggestchip.selected{font-weight:800;color:#5134af;border-color:#7a5bd8;background:#f2edff}
+.suggestchip.selected::after{background:#6e4bd8;color:#fff}
+.selectionstatus{background:#f4f0ff;border:1px solid #ded5f7;border-radius:13px;padding:13px 14px;margin:18px 0 0;align-items:center}
+.selectionstatus b{font-size:15px;color:#5539b3}.selectionstatus span{color:#7d7488}
+.selectedtask{background:#fff;border-color:#dcd5e5;border-radius:9px;box-shadow:0 2px 6px rgba(50,39,71,.03)}
+
+/* question workspace */
+.taskjourney{border-bottom:0;gap:7px;margin-bottom:18px}
+.taskstep{margin-right:0;padding:8px 10px;border:1px solid #e2dde9;border-radius:10px;background:#faf9fc}
+.taskstep.current{background:#6e4bd8;color:#fff;border-color:#6e4bd8}
+.taskstep.current .stepnum{background:#fff;color:#6e4bd8;border-color:#fff}
+.taskstep.done{background:#f0f8f4;border-color:#d8ece3;color:#398465}
+.taskcontext{grid-template-columns:150px 1fr;gap:22px;border:1px solid #e5dfec;border-radius:15px;background:#fbfaff;padding:17px;margin-bottom:22px}
+.contextquestion{font-size:clamp(31px,4.5vw,48px);margin-bottom:18px}
+.contextquestion .taskinline{color:#6343c6}
+.keyhint{background:#faf9fc;border:1px solid #e9e4ee;border-radius:10px;padding:9px 10px;display:inline-block}
+
+/* results retain report quality but gain dashboard structure */
+.resultHero{background:#faf9fd;border:1px solid #e6e1ec;border-radius:17px;padding:22px;grid-template-columns:minmax(0,1.2fr) minmax(220px,.8fr);border-bottom:1px solid #e6e1ec;margin-bottom:20px}
+.score{color:#6542c8}
+.resultintro{margin-bottom:24px}
+.portfolio{background:#fff;border:1px solid #e7e2ed;border-radius:16px;padding:20px;margin:24px 0 28px}
+.portfoliohead{margin-bottom:14px}
+.matrix{border-left:1px solid #bcb3c8;border-bottom:1px solid #bcb3c8;background:linear-gradient(to right,transparent 49.8%,#e3dfea 50%,transparent 50.2%),linear-gradient(to top,transparent 49.8%,#e3dfea 50%,transparent 50.2%)}
+.results{border-top:0;display:grid;gap:10px}
+.resultCard{border:1px solid #e3dee9;border-radius:15px;padding:18px;background:#fff;box-shadow:0 3px 11px rgba(55,42,78,.035)}
+.resultCard:first-child{border-color:#cfc1f2;background:linear-gradient(180deg,#f9f6ff,#fff)}
+.axisgrid{border-top:1px solid #ece7f0}.axis+.axis{border-left:1px solid #ece7f0}
+.nextaction{border:1px solid #d9cef7;background:#f7f3ff;border-radius:17px;padding:22px;margin-top:28px}
+.cta{border-left:0;background:#fff7f2;border:1px solid #f2d8cb;border-radius:14px;padding:17px}
+
+@media(max-width:760px){
+  .card{padding:24px 18px;border-radius:18px}
+  .home{grid-template-columns:1fr;min-height:0}
+  .modecards{grid-template-columns:1fr}
+  .choices,.suggestions{grid-template-columns:1fr}
+  .taskcontext{grid-template-columns:1fr}
+}
+@media(max-width:460px){
+  .wrap{padding:14px 10px 42px}.card{padding:20px 14px}
+  .modecard{grid-template-columns:34px 1fr auto;padding:15px}.modecard:hover{padding-left:15px}
+  .modecard h2{font-size:21px}.modecard .go{padding:9px 10px}.modecard .go::after{content:'→';font-size:14px}
+  .choice{min-height:60px;padding:14px}.choice:hover{padding-left:14px}
+}
+
+
+/* v12 — free-result layout fix + stable selection anchoring */
+.rankmain{min-width:0;word-break:keep-all;overflow-wrap:break-word}
+.resultCard > .rank{
+  grid-column:1/-1;
+  display:grid;
+  grid-template-columns:38px minmax(0,1fr) auto;
+  gap:14px;
+  align-items:start;
+  width:100%;
+}
+.resultCard > .rank .num{width:auto}
+.resultCard > .rank .rankmain{min-width:0}
+.resultCard > .rank .rankmain h3{word-break:keep-all;overflow-wrap:break-word}
+.resultCard > .rank > :last-child{white-space:nowrap;text-align:right}
+.resultCard > .bar,.resultCard > .grid2{grid-column:1/-1;width:100%}
+.resultCard > .grid2{display:grid;grid-template-columns:1fr 1fr}
+@media(max-width:460px){
+  .resultCard > .rank{grid-template-columns:30px minmax(0,1fr) auto;gap:10px}
+  .resultCard > .rank .rankmain h3{font-size:19px;line-height:1.25}
+  .resultCard > .grid2{grid-template-columns:1fr 1fr}
+}
+
+</style>
+</head>
+<body>
+<div class="app">
+<header class="top">
+  <div class="topin">
+    <div class="brandrow"><span class="logo">차</span><span class="brand" id="brandTitle">차팀장랩</span></div>
+    <div class="progress"><i id="bar"></i></div>
+  </div>
+</header>
+<main class="wrap">
+  <section class="card" id="screen"></section>
+  <div class="footer">차팀장랩 · AI는 초안과 정리를 맡고, 중요한 판단과 최종 승인은 사람이 합니다.</div>
+</main>
+</div>
+
+<script>
+const $=s=>document.querySelector(s);
+const esc=(s='')=>String(s).replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[m]));
+
+let mode='home';
+let freeState={step:0,workType:'',job:'',tasks:[],ti:0,qi:0};
+let classState={step:0,workType:'',industry:'',team:'',customer:'',tasks:[],ti:0,qi:0,inheritedFromFree:false};
+
+const freeQs=[
+ {k:'freq',t:'이 일은 얼마나 자주 하나요?',a:[['거의 매일',5],['주 2~4회',4],['주 1회',3],['월 2~3회',2],['가끔',1]]},
+ {k:'time',t:'한 번 할 때 얼마나 걸리나요?',a:[['10분 이하',1],['10~30분',2],['30~60분',3],['1~2시간',4],['2시간 이상',5]]},
+ {k:'rules',t:'매번 비슷한 기준으로 처리하나요?',a:[['거의 같은 기준',5],['대체로 비슷함',4],['절반 정도 비슷함',3],['상황마다 많이 다름',2],['매번 완전히 다름',1]]}
+];
+
+const classQs=[
+ {k:'freq',t:'이 일은 얼마나 자주 하나요?',a:[['거의 매일',5],['주 2~4회',4],['주 1회',3],['월 2~3회',2],['가끔',1]]},
+ {k:'time',t:'한 번 할 때 얼마나 걸리나요?',a:[['10분 이하',1],['10~30분',2],['30~60분',3],['1~2시간',4],['2시간 이상',5]]},
+ {k:'rules',t:'매번 비슷한 기준으로 처리하나요?',a:[['거의 같은 기준',5],['대체로 비슷함',4],['절반 정도 비슷함',3],['상황마다 많이 다름',2],['매번 완전히 다름',1]]},
+ {k:'data',t:'필요한 자료는 얼마나 정리돼 있나요?',a:[['한곳에 잘 정리됨',5],['몇 군데로 나뉨',4],['메신저·문서 등에 흩어짐',3],['대부분 머릿속에 있음',2],['자료가 거의 없음',1]]},
+ {k:'approval',t:'AI가 초안을 만들고 내가 확인하는 방식이 괜찮나요?',a:[['그 방식이면 충분함',5],['대부분 가능',4],['반반',3],['사람 판단이 훨씬 많음',2],['맡기기 어려움',1]]}
+];
+
+const deepOnlyQs=classQs.filter(q=>q.k==='data'||q.k==='approval');
+function classQuestionList(task){
+  return task?.inheritedBasics ? deepOnlyQs : classQs;
+}
+function totalClassQuestionCount(){
+  return classState.tasks.reduce((sum,t)=>sum+classQuestionList(t).length,0);
+}
+function completedClassQuestionCount(ti,qi){
+  let done=0;
+  for(let i=0;i<ti;i++)done+=classQuestionList(classState.tasks[i]).length;
+  return done+qi;
+}
+
+const workTypes=[
+  ['1인사업자','혼자 또는 소규모로 사업을 운영해요'],
+  ['크리에이터','콘텐츠 제작과 채널 운영이 핵심이에요'],
+  ['일반 사업/팀','회사·매장·조직 안에서 함께 일해요'],
+  ['기타','위 유형에 딱 맞지 않아요']
+];
+
+const taskSuggestions={
+  '1인사업자':['고객 문의 답변','상담 후 미등록 고객 후속 연락','예약 확인·안내','재구매·재등록 안내','견적·청구·정산','매출·비용 정리','블로그·SNS 작성','반복 문자·카톡 발송'],
+  '크리에이터':['콘텐츠 레퍼런스 찾기','콘텐츠 아이디어·주제 정리','릴스·쇼츠 대본 작성','캡션 작성','댓글·DM 답변','협찬 메일 확인·답장','촬영 일정·콘텐츠 캘린더 관리','콘텐츠 재가공·업로드','게시물 성과 분석'],
+  '일반 사업/팀':['고객·회원 문의 답변','회의·업무 요청 정리','이메일 분류·답장 초안','일정·예약 안내','자료 취합·보고서 초안','매출·비용 정리','콘텐츠 초안 작성','반복 데이터 입력'],
+  '기타':['문의·메시지 답변','이메일 정리','일정 관리','자료 정리','콘텐츠 작성','반복 데이터 입력']
+};
+function suggestionHtml(type,mode='pick'){
+  const items=taskSuggestions[type]||taskSuggestions['기타'];
+  const attr=mode==='add'?'data-add-suggest':'data-pick-suggest';
+  return `<div class="suggestwrap"><div class="suggesttitle">이런 일을 반복한다면 눌러보세요</div><div class="suggestions">${items.map(x=>`<button type="button" class="suggestchip" ${attr}="${esc(x)}">+ ${esc(x)}</button>`).join('')}</div></div>`;
+}
+function multiTaskHtml(type){
+  const items=taskSuggestions[type]||taskSuggestions['기타'];
+  const selected=new Set(classState.tasks.map(t=>t.name));
+  return `<div class="suggestwrap"><div class="suggesttitle">해당되는 업무를 모두 선택하세요</div><div class="suggestions">${items.map(x=>{const on=selected.has(x);return `<button type="button" class="suggestchip ${on?'selected':''}" data-toggle-task="${esc(x)}">${on?'✓':'+'} ${esc(x)}</button>`}).join('')}</div></div>`;
+}
+function multiFreeTaskHtml(type){
+  const items=taskSuggestions[type]||taskSuggestions['기타'];
+  const selected=new Set(freeState.tasks.map(t=>t.name));
+  return `<div class="suggestwrap"><div class="suggesttitle">해당되는 업무를 모두 선택하세요</div><div class="suggestions">${items.map(x=>{const on=selected.has(x);return `<button type="button" class="suggestchip ${on?'selected':''}" data-toggle-free-task="${esc(x)}">${on?'✓':'+'} ${esc(x)}</button>`}).join('')}</div></div>`;
+}
+function workTypeHtml(current,scope){
+  return '<div class="choices">'+workTypes.map(x=>`<button class="choice ${current===x[0]?'selected':''}" data-choice data-scope="${scope}" data-key="workType" data-val="${x[0]}"><div><b>${x[0]}</b><small>${x[1]}</small></div><span class="dot">${current===x[0]?'✓':''}</span></button>`).join('')+'</div>';
+}
+function jobPlaceholder(type){
+  if(type==='1인사업자')return '예: 필라테스 센터 운영, 온라인 쇼핑몰, 1인 컨설팅';
+  if(type==='크리에이터')return '예: 인스타그램 뷰티 크리에이터, 유튜브, 공동구매';
+  if(type==='일반 사업/팀')return '예: 베이커리, 마케팅팀, 교육회사';
+  return '예: 하고 있는 일이나 업종을 짧게 적어주세요';
+}
+
+
+function taskJourneyHtml(tasks,currentIndex){
+  return `<div class="taskjourney" aria-label="업무 진행 상황">${tasks.map((t,i)=>{
+    const state=i<currentIndex?'done':i===currentIndex?'current':'';
+    const mark=i<currentIndex?'✓':i+1;
+    return `<div class="taskstep ${state}"><span class="stepnum">${mark}</span><span class="stepname">${esc(t.name)}</span></div>`;
+  }).join('')}</div>`;
+}
+function taskContextHtml(tasks,ti,qi,totalQuestions){
+  const t=tasks[ti];
+  const isNew=qi===0;
+  const prev=ti>0?tasks[ti-1]:null;
+  return `${taskJourneyHtml(tasks,ti)}<div class="taskcontext ${isNew?'newtask':''}">
+    <div class="taskmeta"><span class="taskbadge">업무 ${ti+1} / ${tasks.length}</span><span class="questionbadge">질문 ${qi+1} / ${totalQuestions}</span></div>
+    <div class="tasklabel">지금 진단 중인 업무</div>
+    <div class="taskname">${esc(t.name)}</div>
+    ${isNew&&prev?`<div class="taskchange">✓ ‘${esc(prev.name)}’ 진단 완료 · 다음 업무로 넘어왔어요</div>`:''}
+  </div>`;
+}
+function contextualQuestion(taskName,key){
+  const n=`<span class="taskinline">‘${esc(taskName)}’</span>`;
+  if(key==='freq')return `${n}은<br>얼마나 자주 하나요?`;
+  if(key==='time')return `${n}은<br>한 번에 얼마나 걸리나요?`;
+  if(key==='rules')return `${n}은<br>매번 비슷한 기준으로 처리하나요?`;
+  if(key==='data')return `${n}에 필요한 자료는<br>얼마나 정리돼 있나요?`;
+  if(key==='approval')return `${n}은<br>AI 초안 + 내 확인 방식이 괜찮나요?`;
+  return '';
+}
+function nextDiagnosticLabel(tasks,ti,qi,totalQuestions){
+  const isLastQ=qi===totalQuestions-1;
+  const isLastTask=ti===tasks.length-1;
+  if(isLastQ&&isLastTask)return '결과 보기';
+  if(isLastQ&&!isLastTask)return `다음 업무: ${tasks[ti+1].name} →`;
+  return '이 업무 다음 질문 →';
+}
+
+function roleFor(t){
+  let n=t.toLowerCase();
+  if(/레퍼런스|아이디어|주제|기획|대본/.test(n))return '콘텐츠 기획 AI 직원';
+  if(/협찬|브랜드|제안서|광고/.test(n))return '브랜드 협업 AI 직원';
+  if(/댓글|dm|디엠|커뮤니티/.test(n))return '커뮤니티 AI 직원';
+  if(/성과|인사이트|분석|리포트/.test(n))return '성과분석 AI 직원';
+  if(/상담 후|미등록|재등록|재구매|후속/.test(n))return '고객 후속관리 AI 직원';
+  if(/상담|문의|고객|회원|cs|답변/.test(n))return '고객관리 AI 직원';
+  if(/콘텐츠|인스타|블로그|릴스|쇼츠|유튜브|게시|캡션|업로드/.test(n))return '콘텐츠 제작 AI 직원';
+  if(/예약|일정|캘린더/.test(n))return '예약·일정관리 AI 직원';
+  if(/메일|이메일/.test(n))return '메일비서 AI 직원';
+  if(/정산|매출|비용|결제|견적|청구/.test(n))return '사업 운영 AI 직원';
+  return '업무보조 AI 직원';
+}
+function flowFor(t){
+  let n=t.toLowerCase();
+  if(/레퍼런스|아이디어|주제|기획|대본/.test(n))return '레퍼런스 → 핵심 포인트 → 주제 → 기획·대본 초안 → 사람 검수';
+  if(/협찬|브랜드|제안서|광고/.test(n))return '협업 요청 → 조건 추출 → 우선순위 → 답변·제안 초안 → 일정 기록';
+  if(/댓글|dm|디엠|커뮤니티/.test(n))return '댓글·DM → 유형 분류 → 답변 필요 판단 → 초안 → 확인';
+  if(/성과|인사이트|분석|리포트/.test(n))return '성과 데이터 → 비교 → 이상·기회 탐색 → 요약 → 다음 콘텐츠 제안';
+  if(/상담 후|미등록|재등록|재구매|후속/.test(n))return '상담·고객정보 → 대상 분류 → 연락 시점 판단 → 메시지 초안 → 기록';
+  if(/상담|문의|고객|회원|cs|답변/.test(n))return '원문 → 분류 → 우선순위 → 답변 초안 → 사람 확인';
+  if(/콘텐츠|인스타|블로그|릴스|쇼츠|유튜브|게시|캡션|업로드/.test(n))return '자료 → 주제 → 기획 → 제작 초안 → 검수·업로드';
+  if(/예약|일정|캘린더/.test(n))return '예약·일정정보 → 조건 확인 → 대상 분류 → 안내 초안 → 기록';
+  if(/메일|이메일/.test(n))return '메일 → 중요도 분류 → 답장 필요 판단 → 초안 → 확인';
+  if(/정산|매출|비용|결제|견적|청구/.test(n))return '운영 데이터 → 항목 분류 → 계산·요약 → 확인 → 저장';
+  return '입력자료 → 기준 판단 → 결과 초안 → 사람 확인 → 저장';
+}
+function pct(v){return Math.max(0,Math.min(100,Math.round(v)))}
+function deepMetrics(t){
+  const s=t.s||{};
+  const impact=pct((((s.freq||0)*.55+(s.time||0)*.45)/5)*100);
+  const readiness=pct((((s.rules||0)*.45+(s.data||0)*.35+(s.approval||0)*.20)/5)*100);
+  const reviewBurden=pct(100-((s.approval||0)/5*100));
+  const priority=pct(impact*.55+readiness*.45);
+  let type='Later · 뒤로 미루기', typeShort='Later';
+  if(impact>=60&&readiness>=60){type='Quick Win · 바로 구축 후보';typeShort='Quick Win'}
+  else if(impact>=60&&readiness<60){type='Foundation · 효과는 크지만 정리 선행';typeShort='Foundation'}
+  else if(impact<60&&readiness>=60){type='Easy Win · 작게 빠르게 시작';typeShort='Easy Win'}
+  return {impact,readiness,reviewBurden,priority,type,typeShort};
+}
+function burdenLabel(v){return v<=25?'낮음':v<=55?'보통':'높음'}
+function whyRank(t){
+  const s=t.s||{}, reasons=[];
+  if((s.freq||0)>=4)reasons.push('반복 빈도가 높아 누적 효과가 큽니다.');
+  if((s.time||0)>=4)reasons.push('한 번에 드는 시간이 길어 줄였을 때 체감이 큽니다.');
+  if((s.rules||0)>=4)reasons.push('처리 기준이 반복돼 AI에게 규칙을 넘기기 좋습니다.');
+  if((s.data||0)>=4)reasons.push('필요한 자료가 비교적 정리돼 있어 시작이 빠릅니다.');
+  if((s.approval||0)>=4)reasons.push('AI 초안 후 사람이 확인하는 구조와 잘 맞습니다.');
+  if(!reasons.length)reasons.push('효과와 준비도를 함께 비교했을 때 다른 후보보다 우선순위가 높았습니다.');
+  return reasons.slice(0,2).join(' ');
+}
+function bottleneck(t){
+  const s=t.s||{};
+  const vals=[['판단 기준 문서화',s.rules||0],['입력자료 정리',s.data||0],['사람 승인 범위 정의',s.approval||0]].sort((a,b)=>a[1]-b[1]);
+  if(vals[0][1]>=4)return '큰 선행 작업 없이 작은 범위부터 테스트할 수 있습니다.';
+  return `${vals[0][0]}부터 보완하면 구축 성공률이 올라갑니다.`;
+}
+function deepResultCard(t,i){
+  const m=deepMetrics(t);
+  return `<div class="resultCard"><div class="num">0${i+1}</div><div class="rankmain"><h3>${roleFor(t.name)}</h3><p><b>${esc(t.name)}</b><br>${flowFor(t.name)}</p><span class="typebadge">${m.type}</span></div><div class="priority">${m.priority}</div><div class="axisgrid"><div class="axis"><b>효과 잠재력</b><strong>${m.impact}</strong><small>빈도 + 소요시간</small></div><div class="axis"><b>시스템화 준비도</b><strong>${m.readiness}</strong><small>기준 + 자료 + 검수</small></div><div class="axis"><b>사람 검수 부담</b><strong>${burdenLabel(m.reviewBurden)}</strong><small>${m.reviewBurden}%</small></div></div><div class="reasonbox"><div class="reasonrow"><b>왜 이 순위?</b><span>${whyRank(t)}</span></div><div class="reasonrow"><b>먼저 보완</b><span>${bottleneck(t)}</span></div><div class="reasonrow"><b>첫 구축</b><span>${flowFor(t.name)}</span></div></div></div>`;
+}
+function portfolioHtml(tasks){
+  const ranked=[...tasks].sort((a,b)=>b.score-a.score);
+  const dots=ranked.map((t,i)=>{const m=deepMetrics(t);const cls=i===0?'top':(m.impact>=60&&m.readiness>=60?'quick':'');return `<span class="plotdot ${cls}" style="left:${Math.max(4,Math.min(96,m.readiness))}%;bottom:${Math.max(4,Math.min(96,m.impact))}%" title="${esc(t.name)} · 효과 ${m.impact} · 준비도 ${m.readiness}">${i+1}</span>`}).join('');
+  const legend=ranked.map((t,i)=>{const m=deepMetrics(t);return `<div class="legendrow"><span class="legendnum">${i+1}</span><b>${esc(t.name)}</b><span>효과 ${m.impact}</span><span>준비 ${m.readiness}</span></div>`}).join('');
+  return `<div class="portfolio"><div class="portfoliohead"><h3>업무 포트폴리오</h3><p>오른쪽 위에 가까울수록 <b>효과가 크고 지금 만들기 쉬운 업무</b>입니다. 1순위는 오렌지로 표시합니다.</p></div><div class="matrix"><span class="quadlabel ql-q"><b>Quick Win</b>먼저 구축</span><span class="quadlabel ql-f"><b>Foundation</b>정리 후 구축</span><span class="quadlabel ql-e"><b>Easy Win</b>작게 빠르게</span><span class="quadlabel ql-l"><b>Later</b>뒤로 미루기</span>${dots}</div><div class="plotlegend">${legend}</div></div>`;
+}
+function topDesignSummary(){
+  const t=calcClass()[0]; if(!t)return '';
+  const m=deepMetrics(t);
+  return `[1순위 AI 업무 설계 초안]\n업무: ${t.name}\nAI 직원: ${roleFor(t.name)}\n우선순위: ${m.priority}점 / ${m.type}\n효과 잠재력: ${m.impact}\n시스템화 준비도: ${m.readiness}\n사람 검수 부담: ${burdenLabel(m.reviewBurden)}\n\n왜 1순위인가\n- ${whyRank(t)}\n\n먼저 보완할 것\n- ${bottleneck(t)}\n\n첫 구축 흐름\n- ${flowFor(t.name)}`;
+}
+
+let pendingScrollRestore=null;
+function preserveScrollForNextRender(){
+  pendingScrollRestore={y:window.scrollY};
+}
+function renderPreservingScroll(){
+  preserveScrollForNextRender();
+  render();
+}
+function setScreen(html,pct=0,title='차팀장랩'){
+  const restore=pendingScrollRestore;
+  pendingScrollRestore=null;
+  $('#screen').innerHTML=html;
+  $('#bar').style.width=pct+'%';
+  $('#brandTitle').textContent=title;
+  if(restore){
+    requestAnimationFrame(()=>window.scrollTo({top:restore.y,behavior:'instant'}));
+  }else{
+    window.scrollTo({top:0,behavior:'instant'});
+  }
+}
+function choiceHtml(items,key,current,scope){
+  return '<div class="choices">'+items.map(x=>`<button class="choice ${String(current)==String(x[1])?'selected':''}" data-choice data-scope="${scope}" data-key="${key}" data-val="${x[1]}"><div><b>${x[0]}</b></div><span class="dot">${String(current)==String(x[1])?'✓':''}</span></button>`).join('')+'</div>';
+}
+function navHtml(label='다음',disabled=false){
+  return `<div class="actions"><button class="btn soft" data-back>이전</button><button class="btn main" data-next ${disabled?'disabled':''}>${label}</button></div>`;
+}
+function bindGlobal(){
+  document.querySelectorAll('[data-choice]').forEach(btn=>{
+    btn.onclick=()=>{
+      const scope=btn.dataset.scope, key=btn.dataset.key, raw=btn.dataset.val;
+      const val=!isNaN(Number(raw)) && raw.trim()!=='' ? Number(raw) : raw;
+      if(scope==='free') freeState[key]=val;
+      else if(scope==='free-task') freeState.tasks[freeState.ti].s[key]=val;
+      else if(scope==='class-profile') classState[key]=raw;
+      else classState.tasks[classState.ti].s[key]=val;
+      renderPreservingScroll();
+    }
+  });
+  document.querySelectorAll('[data-pick-suggest]').forEach(btn=>{
+    btn.onclick=()=>{
+      const el=$('#task'); if(!el)return;
+      el.value=btn.dataset.pickSuggest;
+      freeState.task=btn.dataset.pickSuggest;
+      renderPreservingScroll();
+    };
+  });
+  document.querySelectorAll('[data-add-suggest]').forEach(btn=>{
+    btn.onclick=()=>{
+      if(classState.tasks.length>=8)return;
+      const v=btn.dataset.addSuggest;
+      if(!classState.tasks.some(t=>t.name===v))classState.tasks.push({name:v,s:{}});
+      renderPreservingScroll();
+    };
+  });
+  document.querySelectorAll('[data-toggle-task]').forEach(btn=>{
+    btn.onclick=()=>toggleTask(btn.dataset.toggleTask);
+  });
+  document.querySelectorAll('[data-remove-task]').forEach(btn=>{
+    btn.onclick=()=>{
+      const i=Number(btn.dataset.removeTask);
+      if(Number.isInteger(i) && i>=0 && i<classState.tasks.length){classState.tasks.splice(i,1);renderPreservingScroll();}
+    };
+  });
+  document.querySelectorAll('[data-toggle-free-task]').forEach(btn=>{
+    btn.onclick=()=>toggleFreeTask(btn.dataset.toggleFreeTask);
+  });
+  document.querySelectorAll('[data-remove-free-task]').forEach(btn=>{
+    btn.onclick=()=>{
+      const i=Number(btn.dataset.removeFreeTask);
+      if(Number.isInteger(i) && i>=0 && i<freeState.tasks.length){freeState.tasks.splice(i,1);renderPreservingScroll();}
+    };
+  });
+  function bindEnter(el,action,{allowEmpty=false}={}){
+    if(!el)return;
+    let composing=false,pending=false,lastRun=0;
+    const run=()=>{
+      if(!allowEmpty && !el.value.trim())return;
+      const now=Date.now(); if(now-lastRun<250)return; lastRun=now;
+      action();
+    };
+    el.addEventListener('compositionstart',()=>{composing=true});
+    el.addEventListener('compositionend',()=>{composing=false;if(pending){pending=false;setTimeout(run,0)}});
+    el.addEventListener('keydown',e=>{
+      if(e.key!=='Enter' && e.keyCode!==13)return;
+      e.preventDefault();
+      if(composing||e.isComposing||e.keyCode===229){
+        pending=true;
+        setTimeout(()=>{if(pending&&!composing){pending=false;run()}},80);
+      }else run();
+    },true);
+    el.addEventListener('keyup',e=>{
+      if((e.key==='Enter'||e.keyCode===13) && !composing){e.preventDefault();run();}
+    });
+  }
+  ['job','industry','customer'].forEach(id=>{
+    const el=$('#'+id);
+    if(el){
+      const sync=()=>{const n=$('[data-next]');if(n && id!=='customer')n.disabled=!el.value.trim();};
+      el.addEventListener('input',sync);
+      bindEnter(el,goNext,{allowEmpty:id==='customer'});
+      sync();
+    }
+  });
+  bindEnter($('#freetaskin'),addFreeTask);
+  bindEnter($('#taskin'),addTask);
+
+  // 선택형 질문도 키보드 흐름을 지원합니다.
+  // 옵션을 고른 뒤 Enter를 누르면 현재 선택값으로 다음 질문/다음 업무로 이동합니다.
+  // input/textarea/select/link/button 자체가 포커스된 경우에는 브라우저 기본 동작과 충돌하지 않게 제외합니다.
+  document.onkeydown=e=>{
+    if(e.key!=='Enter' && e.keyCode!==13)return;
+    const target=e.target;
+    if(target && target.closest && target.closest('input,textarea,select,a,button'))return;
+    const next=$('[data-next]');
+    const selected=$('[data-choice].selected');
+    if(!next || next.disabled || !selected)return;
+    e.preventDefault();
+    goNext();
+  };
+  const deepFromFree=$('[data-deep-from-free]');
+  if(deepFromFree)deepFromFree.onclick=()=>{
+    classState={
+      step:0,
+      workType:freeState.workType,
+      industry:freeState.job,
+      team:'',
+      customer:'',
+      tasks:freeState.tasks.map(t=>({name:t.name,s:{...t.s},inheritedBasics:true})),
+      ti:0,qi:0,
+      inheritedFromFree:true
+    };
+    location.hash='class';
+  };
+  const editInherited=$('[data-edit-inherited]');
+  if(editInherited)editInherited.onclick=()=>{
+    classState.inheritedFromFree=false;
+    classState.step=1;
+    render();
+  };
+  const b=$('[data-back]'); if(b)b.onclick=goBack;
+  const n=$('[data-next]'); if(n)n.onclick=goNext;
+  const st=$('[data-start]'); if(st)st.onclick=()=>{ if(mode==='free') freeState.step=1; else classState.step=classState.inheritedFromFree?3:1; render();};
+  const add=$('[data-add]'); if(add)add.onclick=addTask;
+  const addFree=$('[data-add-free]'); if(addFree)addFree.onclick=addFreeTask;
+  const copy=$('[data-copy]'); if(copy)copy.onclick=copyClassSummary;
+  const copyTop=$('[data-copy-top]'); if(copyTop)copyTop.onclick=async()=>{try{await navigator.clipboard.writeText(topDesignSummary());alert('1순위 업무 설계안을 복사했습니다.');}catch(e){alert('복사가 제한됐습니다. 전체 진단 결과 복사를 이용해주세요.');}};
+  const home=$('[data-home]'); if(home)home.onclick=()=>{location.hash='';};
+}
+function home(){
+  setScreen(`<div class="home"><div class="home-copy"><div class="eyebrow">AI EMPLOYEE DIAGNOSIS</div><h1>AI부터 배우기 전에,<br>내가 넘길 일부터.</h1><p class="lead">반복업무를 비교해 지금 어떤 일을 AI에게 먼저 맡길지 찾고, 심층진단에서는 실제 구축 순서까지 정합니다.</p><div class="home-kicker"><div><b>무료 진단</b><span>반복업무 1~5개를 빠르게 비교</span></div><div><b>심층 진단</b><span>효과 × 준비도로 TOP3 산출</span></div></div></div><div class="modecards"><a class="modecard primary" href="#free"><span class="mode-num">01</span><span class="tag">무료 · 약 3~5분</span><h2>먼저 뽑아야 할<br>AI 직원 찾기</h2><p>지금 반복하는 일 중 무엇부터 맡기면 체감이 큰지 비교합니다.</p><span class="go">→</span></a><a class="modecard" href="#class"><span class="mode-num">02</span><span class="tag">심층 · 약 5~8분</span><h2>업무 시스템<br>심층 진단</h2><p>효과 잠재력과 시스템화 준비도를 나눠 실제 구축 순서를 정합니다.</p><span class="go">→</span></a></div></div>`,0,'차팀장랩');
+}
+function renderFree(){
+  const s=freeState.step;
+  if(s===0) setScreen(`<div class="eyebrow">무료 진단 · 약 3~5분</div><h1>먼저 맡길 일을<br>고르는 진단.</h1><p class="lead">‘뭘 자동화하지?’를 생각해내는 대신, 실제 반복업무를 고르고 빈도·시간·반복기준만 답하면 됩니다.</p><div class="note"><b>결과</b><br>가장 먼저 맡길 후보 1개와 함께 비교한 다음 후보를 보여드립니다. 심층진단으로 이어가면 앞 답변은 다시 묻지 않습니다.</div><div class="actions"><button class="btn orange" data-start>무료 진단 시작 →</button></div>`,2,'무료 AI 직원 진단');
+  else if(s===1) setScreen(`<div class="eyebrow">1 / 3 · 기본정보</div><h2>어떤 방식으로<br>일하고 있나요?</h2><p class="sub">직군에 따라 반복업무 예시를 다르게 보여드릴게요.</p>${workTypeHtml(freeState.workType,'free')}${navHtml('다음',!freeState.workType)}`,12,'무료 AI 직원 진단');
+  else if(s===2) setScreen(`<div class="eyebrow">2 / 3 · 기본정보</div><h2>구체적으로 어떤 일을<br>하고 계세요?</h2><div class="field"><input id="job" enterkeyhint="next" value="${esc(freeState.job)}" placeholder="${esc(jobPlaceholder(freeState.workType))}"></div>${navHtml('다음',!freeState.job)}`,24,'무료 AI 직원 진단');
+  else if(s===3){
+    const count=freeState.tasks.length;
+    const selected=freeState.tasks.map((t,i)=>`<button type="button" class="selectedtask" data-remove-free-task="${i}">${i+1}. ${esc(t.name)} <span>×</span></button>`).join('');
+    const limit=count>=5?'<div class="limitwarn">빠른 진단은 최대 5개까지 비교해요. 다른 업무를 고르려면 하나를 해제해주세요.</div>':'';
+    setScreen(`<div class="eyebrow">3 / 3 · 반복업무 선택 · ${esc(freeState.workType)}</div><h2>지난 일주일,<br>반복했던 일을 모두 골라주세요.</h2><p class="sub">여러 개를 고르면 다음 화면에서 선택한 업무마다 빈도·시간·반복기준을 확인해 서로 비교합니다.</p><div class="selectionstatus"><b>현재 ${count}개 선택됨</b><span>최소 1개 · 최대 5개</span></div>${multiFreeTaskHtml(freeState.workType)}${limit}<div class="helperline">목록에 없는 업무는 직접 추가할 수 있어요.</div><div class="field"><input id="freetaskin" enterkeyhint="done" placeholder="예: ${(taskSuggestions[freeState.workType]||taskSuggestions['기타'])[0]}"></div><div class="actions"><button class="btn soft" data-add-free ${count>=5?'disabled':''}>+ 직접 업무 추가</button></div>${selected?`<div class="selectedlist">${selected}</div>`:''}${navHtml(`${count}개 업무 빠른 진단 →`,count<1)}`,38,'무료 AI 직원 진단');
+  }
+  else if(s===4){
+    const t=freeState.tasks[freeState.ti],q=freeQs[freeState.qi],done=freeState.ti*freeQs.length+freeState.qi;
+    const p=44+Math.round(done/(freeState.tasks.length*freeQs.length)*44);
+    const nextLabel=nextDiagnosticLabel(freeState.tasks,freeState.ti,freeState.qi,freeQs.length);
+    const nextHint=freeState.qi===freeQs.length-1&&freeState.ti<freeState.tasks.length-1?`<div class="nexttaskhint">이 질문이 끝나면 ‘${esc(freeState.tasks[freeState.ti+1].name)}’ 진단으로 넘어갑니다.</div>`:'';
+    setScreen(`${taskContextHtml(freeState.tasks,freeState.ti,freeState.qi,freeQs.length)}<div class="eyebrow">현재 업무에 대해 답해주세요</div><h2 class="contextquestion">${contextualQuestion(t.name,q.k)}</h2>${choiceHtml(q.a,q.k,t.s[q.k],'free-task')}<div class="keyhint">옵션을 선택한 뒤 <kbd>Enter</kbd>를 누르면 다음으로 넘어갑니다.</div>${nextHint}${navHtml(nextLabel,!t.s[q.k])}`,p,'무료 AI 직원 진단');
+  }
+  else {
+    const ranked=calcFree(),top=ranked[0],others=ranked.slice(1,3);
+    const othersHtml=others.length?`<div style="margin-top:18px"><h3>함께 비교한 다음 후보</h3>${others.map((t,i)=>`<div class="resultCard"><div class="rank"><div class="num">${i+2}</div><div class="rankmain"><h3>${roleFor(t.name)}</h3><p>${esc(t.name)}</p></div><div style="font-size:22px;font-weight:950;color:var(--purple)">${t.score}</div></div></div>`).join('')}</div>`:'';
+    setScreen(`<div class="resultHero"><div class="eyebrow">무료 빠른 진단 결과 · ${esc(freeState.workType)}</div><h2>가장 먼저 검토할 AI 직원</h2><div class="score">${top?.score||0}점</div><p><b>${esc(top?.name||'-')}</b> 업무가 입력한 업무 중 가장 먼저 AI에게 맡겨볼 후보로 나왔습니다.</p></div><div class="resultCard"><div class="rank"><div class="num">1</div><div class="rankmain"><h3>${roleFor(top?.name||'')}</h3><p>${flowFor(top?.name||'')}</p></div></div><div class="bar"><i style="width:${top?.score||0}%"></i></div><div class="grid2"><div class="mini"><b>반복기준 명확도</b><span>${top?.ready||0}%</span></div><div class="mini"><b>시간절감 잠재력</b><span>${top?.potential||0}%</span></div></div></div>${othersHtml}<div class="cta"><h3>빠른 진단은 여기까지 봅니다.</h3><p>실제 구축 우선순위는 자료 준비도와 사람 검수 가능성까지 함께 봐야 달라질 수 있어요. 심층진단에서는 앞에서 답한 3개 기준은 그대로 쓰고, 자료 준비도와 사람 검수 가능성 2개만 더 확인합니다.</p><div class="actions"><button class="btn orange" data-deep-from-free>무료 진단 정보 그대로 이어서 심층진단 →</button></div></div><div class="actions"><button class="btn soft" data-home>처음으로</button></div>`,100,'무료 AI 직원 진단');
+  }
+}
+function renderClass(){
+  const s=classState.step;
+  const inherited=classState.inheritedFromFree&&classState.workType;
+  if(s===0) setScreen(`<div class="eyebrow">심층 진단 · 약 5~8분</div><h1>무엇부터 만들지<br>결정하는 진단.</h1><p class="lead">효과가 큰 일과 실제로 만들기 쉬운 일을 분리해서 봅니다. 결과는 단순 점수가 아니라 <b>Quick Win / Foundation / Easy Win / Later</b>로 해석됩니다.</p><div class="resultintro"><b>분석 기준</b><p>효과 잠재력: 빈도 + 소요시간 · 시스템화 준비도: 반복기준 + 자료상태 + 사람검수 가능성</p></div>${inherited?`<div class="carryover"><div class="carrychip">✓ 무료 진단 정보 이어받음</div><strong>${esc(classState.workType)}</strong><span>${esc(classState.industry||'업무 정보')} · ${classState.tasks.length}개 업무의 빈도·시간·반복기준 답변을 그대로 사용합니다.</span></div>`:`<div class="note">최종 결과는 ‘AI를 뭘 배울까?’가 아니라 <b>내 업무에서 무엇부터 실제로 만들까?</b>를 결정하는 데 사용합니다.</div>`}<div class="actions"><button class="btn orange" data-start>${inherited?'앞 답변 이어서 분석하기 →':'심층 분석 시작 →'}</button>${inherited?'<button class="btn soft" data-edit-inherited>직군·업무 수정</button>':''}</div>`,2,'수강 전 심층진단');
+  else if(s===1) setScreen(`<div class="eyebrow">기본정보 1 / 4</div><h2>어떤 방식으로<br>일하고 있나요?</h2><p class="sub">선택한 직군에 맞춰 반복업무 후보를 보여드립니다.</p>${workTypeHtml(classState.workType,'class-profile')}${navHtml('다음',!classState.workType)}`,7,'수강 전 심층진단');
+  else if(s===2) setScreen(`<div class="eyebrow">기본정보 2 / 4</div><h2>구체적으로 어떤 일을<br>하고 계세요?</h2><div class="field"><input id="industry" enterkeyhint="next" value="${esc(classState.industry)}" placeholder="${esc(jobPlaceholder(classState.workType))}"></div>${navHtml('다음',!classState.industry)}`,13,'수강 전 심층진단');
+  else if(s===3) setScreen(`<div class="eyebrow">${inherited?'심층정보 1 / 2':'기본정보 3 / 4'}</div>${inherited?`<div class="carrychip">✓ ${esc(classState.workType)} 정보 이어받음</div>`:''}<h2>몇 명이 함께 일하나요?</h2>${choiceHtml([['혼자 운영','혼자 운영'],['2~5명','2~5명'],['6명 이상','6명 이상']],'team',classState.team,'class-profile')}${navHtml('다음',!classState.team)}`,18,'수강 전 심층진단');
+  else if(s===4) setScreen(`<div class="eyebrow">${inherited?'심층정보 2 / 2':'기본정보 4 / 4'}</div>${inherited?`<div class="carrychip">✓ ${esc(classState.workType)} · ${esc(classState.industry)}</div>`:''}<h2>주로 누구를 상대하나요?</h2><div class="field"><input id="customer" enterkeyhint="next" value="${esc(classState.customer)}" placeholder="예: 30~50대 여성 회원, 브랜드 담당자, 기업 고객"></div>${navHtml()}`,23,'수강 전 심층진단');
+  else if(s===5){
+    const count=classState.tasks.length;
+    const selected=classState.tasks.map((t,i)=>`<button type="button" class="selectedtask" data-remove-task="${i}">${i+1}. ${esc(t.name)} <span>×</span></button>`).join('');
+    const limit=count>=8?'<div class="limitwarn">최대 8개까지 선택할 수 있어요. 다른 업무를 선택하려면 하나를 해제해주세요.</div>':'';
+    setScreen(`<div class="eyebrow">반복업무 선택 · ${esc(classState.workType)}</div>${inherited?'<div class="carrychip">✓ 무료 진단 업무 + 빈도·시간·반복기준 답변을 이어받았어요</div>':''}<h2>${inherited?'심층진단할 업무를<br>확인해주세요.':'지난 일주일,<br>반복했던 일을 모두 골라주세요.'}</h2><p class="sub">${inherited?'앞에서 선택한 업무와 이미 답한 3개 기준을 그대로 가져왔습니다. 기존 업무는 심층 기준 2개만 추가로 확인하고, 새로 추가한 업무는 5개 기준을 모두 확인합니다.':'정확하지 않아도 괜찮아요. 해당되는 업무를 여러 개 선택하면 다음 화면에서 업무별로 하나씩 진단합니다.'}</p><div class="selectionstatus"><b>현재 ${count}개 선택됨</b><span>최소 3개 · 최대 8개</span></div>${multiTaskHtml(classState.workType)}${limit}<div class="helperline">목록에 없는 업무가 있다면 직접 추가하세요.</div><div class="field"><input id="taskin" enterkeyhint="done" placeholder="예: ${(taskSuggestions[classState.workType]||taskSuggestions['기타'])[0]}"></div><div class="actions"><button class="btn soft" data-add ${count>=8?'disabled':''}>+ 직접 업무 추가</button></div>${selected?`<div class="selectedlist">${selected}</div>`:''}<div class="microcta"><b>다음 단계에서 무엇을 비교하나요?</b>선택한 업무마다 효과와 구축 준비도를 비교해 ‘시간은 많이 먹지만 정리부터 필요한 일’과 ‘지금 바로 만들기 좋은 일’을 구분합니다.</div>${navHtml(`${count}개 업무 분석 시작 →`,count<3)}`,29,'수강 전 심층진단');
+  } else if(s===6){
+    const t=classState.tasks[classState.ti],qList=classQuestionList(t),q=qList[classState.qi];
+    const done=completedClassQuestionCount(classState.ti,classState.qi),total=totalClassQuestionCount();
+    const p=32+Math.round(done/Math.max(total,1)*56);
+    const nextLabel=nextDiagnosticLabel(classState.tasks,classState.ti,classState.qi,qList.length);
+    const nextHint=classState.qi===qList.length-1&&classState.ti<classState.tasks.length-1?`<div class="nexttaskhint">이 질문이 끝나면 ‘${esc(classState.tasks[classState.ti+1].name)}’ 진단으로 넘어갑니다.</div>`:'';
+    const inheritedNote=t.inheritedBasics?`<div class="carrychip">✓ 무료에서 빈도·소요시간·반복기준 3개 답변 승계 · 심층 질문 ${classState.qi+1} / ${qList.length}</div>`:'';
+    setScreen(`${taskContextHtml(classState.tasks,classState.ti,classState.qi,qList.length)}${inheritedNote}<div class="eyebrow">현재 업무에 대해 답해주세요</div><h2 class="contextquestion">${contextualQuestion(t.name,q.k)}</h2>${choiceHtml(q.a,q.k,t.s[q.k],'class-task')}<div class="keyhint">옵션을 선택한 뒤 <kbd>Enter</kbd>를 누르면 다음으로 넘어갑니다.</div>${nextHint}${navHtml(nextLabel,!t.s[q.k])}`,p,'수강 전 심층진단');
+  } else {
+    const ranked=calcClass(), top=ranked.slice(0,3), first=top[0], firstM=first?deepMetrics(first):null;
+    const cards=top.map((t,i)=>deepResultCard(t,i)).join('');
+    setScreen(`<div class="resultHero"><div class="eyebrow">심층 분석 결과 · ${esc(classState.workType)}</div><h2>${esc(classState.industry)}에서<br>먼저 구축할 TOP3</h2><p>${classState.tasks.length}개 업무를 ‘효과’와 ‘구축 준비도’를 분리해 비교했습니다. 점수가 높은 이유와 선행 조건까지 함께 보세요.</p></div><div class="resultintro"><b>이 결과를 읽는 기준</b><p><b>효과 잠재력</b>은 빈도·소요시간, <b>시스템화 준비도</b>는 반복 기준·자료 상태·사람 검수 가능성을 봅니다. 최종 우선순위는 효과 55% + 준비도 45%로 계산합니다.</p></div>${portfolioHtml(ranked)}<div class="results">${cards}</div>
+    <div class="nextaction"><div class="eyebrow">NEXT ACTION</div><h3>${first?`1순위 ‘${esc(first.name)}’부터 작게 구축하세요.`:'1순위부터 작게 구축하세요.'}</h3><p>${firstM?`${firstM.type}. ${bottleneck(first)}`:''}<br>진단에서 끝내지 않고 입력자료 → 판단기준 → 초안 → 사람확인 → 저장 흐름으로 실제 업무 시스템을 만듭니다.</p><div class="actions"><button class="btn orange" data-copy-top>1순위 업무 설계안 복사 →</button><button class="btn soft" data-copy>전체 진단 결과 복사</button></div></div>
+    <div class="cta"><h3>차팀장 집중반에서는 여기서 시작합니다.</h3><p><b>1순위 실제 구축 → 직접 재실행 → 오류 수정 → 2·3순위로 확장.</b><br>이 결과를 가져오면 “AI를 뭘 배울지”가 아니라 “내 업무에서 무엇을 만들지”부터 시작할 수 있습니다.</p></div>
+    <div class="actions"><button class="btn soft" data-home>처음으로</button></div>`,100,'수강 전 심층진단');
+  }
+}
+function calcFree(){
+  freeState.tasks.forEach(t=>{
+    const s=t.s;
+    t.score=Math.round((s.freq*30+s.time*25+s.rules*30+4*15)/5);
+    t.ready=Math.round((s.rules||0)/5*100);
+    t.potential=Math.round(((s.freq||0)+(s.time||0))/10*100);
+  });
+  return [...freeState.tasks].sort((a,b)=>b.score-a.score);
+}
+function calcClass(){
+  classState.tasks.forEach(t=>{
+    const m=deepMetrics(t);
+    t.score=m.priority;t.ready=m.readiness;t.potential=m.impact;t.reviewBurden=m.reviewBurden;t.buildType=m.type;
+  });
+  return [...classState.tasks].sort((a,b)=>b.score-a.score);
+}
+function classSummary(){
+  const r=calcClass().slice(0,3);
+  return `[차팀장 AI 업무 시스템 심층진단]
+
+일하는 방식: ${classState.workType}
+업종/업무: ${classState.industry}
+팀 규모: ${classState.team}
+주요 고객: ${classState.customer||'-'}
+
+AI 직원 TOP3
+${r.map((t,i)=>{const m=deepMetrics(t);return `${i+1}. ${t.name} / 우선순위 ${m.priority}점 / 효과 ${m.impact} / 준비도 ${m.readiness} / 검수부담 ${burdenLabel(m.reviewBurden)} / ${m.typeShort}`}).join('\n')}
+
+1순위 선정 이유
+- ${r[0]?whyRank(r[0]):'-'}
+
+1순위에서 먼저 보완할 것
+- ${r[0]?bottleneck(r[0]):'-'}
+
+집중반에서 확인할 것
+- 필요한 입력자료
+- 내가 직접 판단하는 기준
+- 사람이 승인할 지점
+- 결과 저장 위치와 다음 행동`;
+}
+function goNext(){
+  if(mode==='free'){
+    if(freeState.step===1){if(!freeState.workType)return;freeState.step=2;}
+    else if(freeState.step===2){const v=$('#job').value.trim();if(!v)return;freeState.job=v;freeState.step=3;}
+    else if(freeState.step===3){if(freeState.tasks.length<1)return;freeState.step=4;freeState.ti=0;freeState.qi=0;}
+    else if(freeState.step===4){
+      const t=freeState.tasks[freeState.ti],q=freeQs[freeState.qi];if(!t.s[q.k])return;
+      if(freeState.qi<freeQs.length-1)freeState.qi++;
+      else if(freeState.ti<freeState.tasks.length-1){freeState.ti++;freeState.qi=0;}
+      else freeState.step=5;
+    }
+    render(); return;
+  }
+  if(mode==='class'){
+    if(classState.step===1){if(!classState.workType)return;classState.step=2;}
+    else if(classState.step===2){const v=$('#industry').value.trim();if(!v)return;classState.industry=v;classState.step=3;}
+    else if(classState.step===3){if(!classState.team)return;classState.step=4;}
+    else if(classState.step===4){classState.customer=$('#customer').value.trim();classState.step=5;}
+    else if(classState.step===5){if(classState.tasks.length<3)return;classState.step=6;classState.ti=0;classState.qi=0;}
+    else if(classState.step===6){
+      const t=classState.tasks[classState.ti],qList=classQuestionList(t),q=qList[classState.qi]; if(!q||!t.s[q.k])return;
+      if(classState.qi<qList.length-1)classState.qi++;
+      else if(classState.ti<classState.tasks.length-1){classState.ti++;classState.qi=0;}
+      else classState.step=7;
+    }
+    render();
+  }
+}
+function goBack(){
+  if(mode==='free'){
+    if(freeState.step===1)freeState.step=0;
+    else if(freeState.step===2)freeState.step=1;
+    else if(freeState.step===3)freeState.step=2;
+    else if(freeState.step===4){
+      if(freeState.qi>0)freeState.qi--;
+      else if(freeState.ti>0){freeState.ti--;freeState.qi=freeQs.length-1;}
+      else freeState.step=3;
+    } else if(freeState.step===5){freeState.step=4;freeState.ti=freeState.tasks.length-1;freeState.qi=freeQs.length-1;}
+    else location.hash='';
+  } else {
+    if(classState.step===1)classState.step=0;
+    else if(classState.step===2)classState.step=1;
+    else if(classState.step===3)classState.step=classState.inheritedFromFree?0:2;
+    else if(classState.step===4)classState.step=3;
+    else if(classState.step===5)classState.step=4;
+    else if(classState.step===6){
+      if(classState.qi>0)classState.qi--;
+      else if(classState.ti>0){
+        classState.ti--;
+        classState.qi=classQuestionList(classState.tasks[classState.ti]).length-1;
+      }
+      else classState.step=5;
+    } else if(classState.step===7){
+      classState.step=6;
+      classState.ti=classState.tasks.length-1;
+      classState.qi=classQuestionList(classState.tasks[classState.ti]).length-1;
+    }
+  }
+  render();
+}
+function toggleFreeTask(v){
+  const i=freeState.tasks.findIndex(t=>t.name===v);
+  if(i>=0){freeState.tasks.splice(i,1);}
+  else{
+    if(freeState.tasks.length>=5){alert('빠른 진단은 최대 5개 업무까지 비교할 수 있어요.');return;}
+    freeState.tasks.push({name:v,s:{}});
+  }
+  renderPreservingScroll();
+}
+function addFreeTask(){
+  const el=$('#freetaskin'),v=el?.value.trim();
+  if(!v)return;
+  if(freeState.tasks.some(t=>t.name===v)){alert('이미 선택한 업무예요.');return;}
+  if(freeState.tasks.length>=5){alert('빠른 진단은 최대 5개 업무까지 비교할 수 있어요.');return;}
+  freeState.tasks.push({name:v,s:{}});
+  renderPreservingScroll();
+}
+function toggleTask(v){
+  const i=classState.tasks.findIndex(t=>t.name===v);
+  if(i>=0){
+    classState.tasks.splice(i,1);
+  }else{
+    if(classState.tasks.length>=8){alert('업무는 최대 8개까지 선택할 수 있어요.');return;}
+    classState.tasks.push({name:v,s:{}});
+  }
+  renderPreservingScroll();
+}
+function addTask(){
+  const el=$('#taskin'),v=el?.value.trim();
+  if(!v)return;
+  if(classState.tasks.some(t=>t.name===v)){alert('이미 선택한 업무예요.');return;}
+  if(classState.tasks.length>=8){alert('업무는 최대 8개까지 선택할 수 있어요.');return;}
+  classState.tasks.push({name:v,s:{}});
+  renderPreservingScroll();
+}
+async function copyClassSummary(){
+  try{await navigator.clipboard.writeText(classSummary());alert('진단 결과를 복사했습니다.');}
+  catch(e){alert('브라우저에서 복사가 제한됐습니다. 아래 요약을 길게 눌러 복사해주세요.');}
+}
+function route(){
+  const h=location.hash.replace('#','');
+  mode=h==='free'?'free':h==='class'?'class':'home';
+  render();
+}
+function render(){
+  if(mode==='home')home();
+  else if(mode==='free')renderFree();
+  else renderClass();
+  bindGlobal();
+}
+window.addEventListener('hashchange',route);
+route();
+</script>
+</body>
+</html>
