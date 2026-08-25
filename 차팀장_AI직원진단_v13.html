@@ -1,0 +1,883 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>차팀장 AI 직원 진단</title>
+<meta name="description" content="반복업무를 3분 안에 비교해 지금 먼저 맡길 AI 직원을 찾아드립니다.">
+<meta property="og:title" content="차팀장 AI 직원 진단">
+<meta property="og:description" content="AI부터 배우기 전에, 내가 넘길 일부터. 반복업무 진단으로 먼저 만들 AI 업무 시스템을 찾아보세요.">
+<meta property="og:type" content="website">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%235C0F8B'/%3E%3Ctext x='32' y='42' font-size='30' font-weight='800' text-anchor='middle' fill='white' font-family='sans-serif'%3E차%3C/text%3E%3C/svg%3E">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css">
+<style>
+/* ============ v13 design system — single clean layer ============ */
+:root{
+  --plum:#5C0F8B;
+  --plum-deep:#470B6E;
+  --plum-bright:#7A2BB4;
+  --plum-tint:#F4EDFA;
+  --plum-line:#E3D4F1;
+  --ink:#201827;
+  --sub:#554D5E;
+  --muted:#8A8393;
+  --canvas:#F6F4F8;
+  --card:#FFFFFF;
+  --line:#ECE8F1;
+  --line-strong:#DAD3E2;
+  --green:#0F8A5E;
+  --green-tint:#EAF7F1;
+  --warn:#B45309;
+  --warn-tint:#FCF3E8;
+  --r-sm:12px;
+  --r-md:16px;
+  --r-lg:22px;
+  --shadow-1:0 1px 2px rgba(32,24,39,.04),0 4px 14px rgba(32,24,39,.05);
+  --shadow-2:0 2px 6px rgba(92,15,139,.10),0 12px 28px rgba(32,24,39,.10);
+}
+*{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%}
+body{
+  margin:0;min-height:100vh;background:var(--canvas);color:var(--ink);
+  font-family:"Pretendard Variable",Pretendard,-apple-system,BlinkMacSystemFont,"Apple SD Gothic Neo","Noto Sans KR",sans-serif;
+  letter-spacing:-.01em;word-break:keep-all;
+}
+button,input,textarea,select{font:inherit}
+button{touch-action:manipulation;-webkit-tap-highlight-color:transparent}
+a{color:inherit;text-decoration:none}
+
+/* ---- app frame ---- */
+.top{position:sticky;top:0;z-index:30;background:rgba(255,255,255,.88);backdrop-filter:blur(14px);border-bottom:1px solid var(--line)}
+.topin{max-width:720px;margin:auto;padding:12px 18px 10px}
+.brandrow{display:flex;align-items:center;gap:9px;cursor:pointer;width:fit-content}
+.logo{width:30px;height:30px;border-radius:9px;background:linear-gradient(150deg,var(--plum-bright),var(--plum-deep));color:#fff;display:grid;place-items:center;font-size:13px;font-weight:800;box-shadow:0 4px 10px rgba(92,15,139,.25)}
+.brand{font-size:14px;font-weight:750;letter-spacing:-.02em}
+.progress{height:4px;background:#EBE6F1;margin-top:10px;border-radius:999px;overflow:hidden}
+.progress>i{display:block;height:100%;width:0;background:linear-gradient(90deg,var(--plum-bright),var(--plum));border-radius:999px;transition:width .3s ease}
+.wrap{max-width:720px;margin:auto;padding:22px 18px 64px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:var(--r-lg);padding:28px 24px;min-height:440px;box-shadow:var(--shadow-1)}
+.footer{text-align:center;margin-top:28px;font-size:12px;color:var(--muted);line-height:1.6}
+
+/* screen entrance */
+.fadein{animation:rise .28s ease both}
+@keyframes rise{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
+@media (prefers-reduced-motion:reduce){.fadein{animation:none}.btn,.choice,.suggestchip{transition:none!important}}
+
+/* ---- type ---- */
+h1,h2,h3,p{margin-top:0}
+h1{font-size:clamp(32px,7vw,44px);line-height:1.16;letter-spacing:-.045em;margin-bottom:14px;font-weight:800;text-wrap:balance}
+h2{font-size:clamp(24px,5.4vw,32px);line-height:1.22;letter-spacing:-.038em;margin-bottom:12px;font-weight:780;text-wrap:balance}
+h3{font-size:19px;line-height:1.3;letter-spacing:-.028em;font-weight:750}
+.lead{font-size:16px;line-height:1.65;color:var(--sub);max-width:560px}
+.sub{font-size:14px;line-height:1.65;color:var(--muted);max-width:560px}
+.eyebrow{display:inline-flex;align-items:center;background:var(--plum-tint);color:var(--plum);border:1px solid var(--plum-line);border-radius:999px;padding:6px 11px;margin-bottom:14px;font-size:11px;font-weight:750;letter-spacing:.01em}
+.secthead{margin:30px 0 12px;font-size:17px}
+
+.note,.microcta,.resultintro,.carryover{border:1px solid var(--line);background:#FBFAFD;border-radius:var(--r-md);padding:14px 16px;font-size:13px;line-height:1.65;color:var(--sub);margin-top:18px}
+.note b,.microcta b,.resultintro b,.carryover b{color:var(--ink)}
+
+/* ---- inputs ---- */
+.field{margin:22px 0 16px}
+.field input,.field textarea{width:100%;border:1.5px solid var(--line-strong);border-radius:var(--r-md);padding:15px 16px;background:#fff;font-size:16px;color:var(--ink);outline:0;transition:border-color .15s,box-shadow .15s}
+.field input::placeholder,.field textarea::placeholder{color:#B4ADBE}
+.field input:focus,.field textarea:focus{border-color:var(--plum);box-shadow:0 0 0 3px rgba(92,15,139,.10)}
+.field textarea{min-height:110px;resize:vertical}
+
+/* ---- single choice: tappable list cards ---- */
+.choices{display:grid;grid-template-columns:1fr;gap:10px;margin-top:20px}
+@media(min-width:560px){.choices{grid-template-columns:1fr 1fr}}
+.choice{
+  width:100%;text-align:left;background:#fff;color:var(--ink);cursor:pointer;
+  border:1.5px solid var(--line-strong);border-radius:var(--r-md);
+  padding:16px;min-height:60px;display:flex;align-items:center;justify-content:space-between;gap:12px;
+  transition:transform .12s ease,border-color .15s,background .15s,box-shadow .15s;
+}
+.choice:hover{border-color:var(--plum-line);box-shadow:var(--shadow-1)}
+.choice:active{transform:scale(.98)}
+.choice:focus-visible{outline:2px solid var(--plum);outline-offset:2px}
+.choice.selected{border-color:var(--plum);background:var(--plum-tint);box-shadow:0 0 0 1px var(--plum)}
+.choice b{font-size:15px;font-weight:650}
+.choice.selected b{font-weight:750;color:var(--plum-deep)}
+.choice small{display:block;color:var(--muted);font-size:12px;line-height:1.45;margin-top:3px;font-weight:450}
+.dot{width:24px;height:24px;border-radius:50%;border:1.5px solid var(--line-strong);background:#fff;display:grid;place-items:center;flex:none;font-size:12px;color:transparent;transition:background .15s,border-color .15s}
+.choice.selected .dot{background:var(--plum);border-color:var(--plum);color:#fff;animation:pop .22s ease}
+@keyframes pop{from{transform:scale(.5)}to{transform:scale(1)}}
+
+/* ---- buttons ---- */
+.actions{display:flex;align-items:center;gap:10px;margin-top:26px;flex-wrap:wrap}
+.actions.nav{position:sticky;bottom:0;z-index:5;flex-wrap:nowrap;margin-top:28px;padding:14px 0 10px;background:linear-gradient(180deg,rgba(255,255,255,0),#fff 30%)}
+.btn{
+  border:1.5px solid var(--line-strong);border-radius:var(--r-md);padding:14px 18px;
+  font-weight:750;font-size:15px;min-height:54px;cursor:pointer;background:#fff;color:var(--sub);
+  transition:transform .12s ease,box-shadow .15s ease,background .15s,border-color .15s;
+}
+.btn:focus-visible{outline:2px solid var(--plum);outline-offset:2px}
+.btn.primary{
+  background:linear-gradient(180deg,var(--plum-bright),var(--plum));border-color:var(--plum);color:#fff;flex:1;
+  box-shadow:0 8px 18px rgba(92,15,139,.28),inset 0 1px 0 rgba(255,255,255,.22);
+}
+.btn.primary:hover{box-shadow:0 10px 22px rgba(92,15,139,.34),inset 0 1px 0 rgba(255,255,255,.22)}
+.btn.primary:active{transform:translateY(1px) scale(.985);box-shadow:0 3px 8px rgba(92,15,139,.24)}
+.btn.ghost{background:#fff}
+.btn.ghost:hover{border-color:var(--plum-line);color:var(--ink)}
+.btn.ghost:active{transform:scale(.97)}
+.btn:disabled{opacity:.35;cursor:not-allowed;transform:none;box-shadow:none}
+.btn.block{width:100%;flex:1}
+
+/* ---- home ---- */
+.home-hero{padding:8px 0 4px}
+.home-kicker{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:22px 0 6px}
+.home-kicker div{background:#FBFAFD;border:1px solid var(--line);border-radius:var(--r-md);padding:13px 14px}
+.home-kicker b{display:block;font-size:13px;margin-bottom:4px;color:var(--plum-deep)}
+.home-kicker span{font-size:12px;color:var(--muted);line-height:1.5}
+.modecards{display:grid;gap:12px;margin-top:22px}
+.modecard{
+  display:grid;grid-template-columns:1fr auto;gap:6px 14px;align-items:center;
+  padding:20px;border:1.5px solid var(--line-strong);border-radius:18px;background:#fff;box-shadow:var(--shadow-1);
+  transition:transform .14s ease,border-color .15s,box-shadow .18s;cursor:pointer;
+}
+.modecard:hover{transform:translateY(-2px);border-color:var(--plum-line);box-shadow:var(--shadow-2)}
+.modecard:active{transform:scale(.985)}
+.modecard.primary{background:linear-gradient(180deg,var(--plum-tint),#fff);border-color:var(--plum-line)}
+.modecard .tag{grid-column:1;font-size:11px;font-weight:700;color:var(--muted)}
+.modecard.primary .tag{color:var(--plum)}
+.modecard h2{grid-column:1;font-size:21px;margin:2px 0 4px}
+.modecard.primary h2{color:var(--plum-deep)}
+.modecard p{grid-column:1;font-size:13px;color:var(--muted);line-height:1.55;margin:0}
+.modecard .go{grid-column:2;grid-row:1/4;align-self:center;background:var(--plum);color:#fff;border-radius:12px;padding:11px 14px;font-weight:750;font-size:13px;box-shadow:0 5px 12px rgba(92,15,139,.25);white-space:nowrap}
+.modecard:not(.primary) .go{background:#fff;color:var(--sub);border:1.5px solid var(--line-strong);box-shadow:none}
+
+/* ---- multi select ---- */
+.suggestwrap{margin:20px 0 10px;background:#FBFAFD;border:1px solid var(--line);border-radius:var(--r-md);padding:14px}
+.suggesttitle{font-size:12px;font-weight:750;color:var(--sub);padding:0 0 11px}
+.suggestions{display:flex;flex-wrap:wrap;gap:8px}
+.suggestchip{
+  border:1.5px solid var(--line-strong);border-radius:999px;background:#fff;text-align:left;
+  padding:10px 14px;font-size:13px;font-weight:600;color:var(--sub);cursor:pointer;
+  transition:transform .12s ease,background .15s,border-color .15s,color .15s;
+}
+.suggestchip:hover{border-color:var(--plum-line)}
+.suggestchip:active{transform:scale(.95)}
+.suggestchip.selected{background:var(--plum);border-color:var(--plum);color:#fff}
+.selectionstatus{display:flex;align-items:center;justify-content:space-between;gap:16px;margin:18px 0 0;background:var(--plum-tint);border:1px solid var(--plum-line);border-radius:var(--r-md);padding:13px 15px}
+.selectionstatus b{font-size:15px;color:var(--plum-deep)}
+.selectionstatus span{font-size:12px;color:var(--muted)}
+.selectedlist{display:flex;flex-wrap:wrap;gap:8px;margin:14px 0 0}
+.selectedtask{border:1px solid var(--line-strong);background:#fff;color:var(--sub);border-radius:10px;padding:8px 11px;font-size:12px;font-weight:650;cursor:pointer}
+.selectedtask span{margin-left:5px;color:var(--muted)}
+.selectedtask:active{transform:scale(.95)}
+.helperline{font-size:12px;line-height:1.55;color:var(--muted);margin-top:12px}
+.limitwarn{font-size:12px;line-height:1.55;color:var(--warn);font-weight:700;margin-top:10px}
+
+/* ---- question workspace ---- */
+.taskjourney{display:flex;gap:7px;overflow-x:auto;margin:0 0 16px;scrollbar-width:none}
+.taskjourney::-webkit-scrollbar{display:none}
+.taskstep{flex:none;display:flex;align-items:center;gap:7px;padding:8px 11px;border:1px solid var(--line);border-radius:10px;background:#FBFAFD;font-size:11px;font-weight:600;color:var(--muted);max-width:180px}
+.taskstep .stepnum{width:18px;height:18px;border-radius:50%;border:1px solid var(--line-strong);display:grid;place-items:center;font-size:9px;flex:none;background:#fff}
+.taskstep.current{background:var(--plum);border-color:var(--plum);color:#fff}
+.taskstep.current .stepnum{background:#fff;color:var(--plum);border-color:#fff}
+.taskstep.done{background:var(--green-tint);border-color:#CBE9DC;color:var(--green)}
+.taskstep.done .stepnum{border-color:var(--green);color:var(--green)}
+.taskstep .stepname{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.taskcontext{display:grid;gap:6px;border:1px solid var(--line);border-radius:var(--r-md);background:#FBFAFD;padding:15px 17px;margin-bottom:20px}
+.taskmeta{display:flex;gap:10px}
+.taskbadge,.questionbadge{font-size:11px;font-weight:650;color:var(--muted)}
+.tasklabel{font-size:11px;color:var(--muted);font-weight:700}
+.taskname{font-size:19px;line-height:1.3;font-weight:780;letter-spacing:-.03em}
+.taskchange{font-size:12px;color:var(--green);font-weight:700;margin-top:4px}
+.contextquestion{font-size:clamp(23px,5vw,30px);line-height:1.24;letter-spacing:-.036em;margin-bottom:16px}
+.contextquestion .taskinline{color:var(--plum)}
+.keyhint{font-size:12px;color:var(--muted);margin-top:14px;background:#FBFAFD;border:1px solid var(--line);border-radius:10px;padding:9px 11px;display:inline-block}
+.keyhint kbd{border:1px solid var(--line-strong);border-bottom-width:2px;border-radius:5px;background:#fff;padding:2px 6px;font-size:10px;font-weight:750;color:var(--sub)}
+@media (hover:none){.keyhint{display:none}}
+.nexttaskhint{font-size:12px;line-height:1.55;color:var(--muted);margin-top:10px}
+.carrychip{display:inline-block;font-size:11px;font-weight:750;color:var(--plum);margin-bottom:8px}
+.carryover strong{display:block;font-size:18px;margin:3px 0}
+.carryover span{font-size:13px;color:var(--muted)}
+
+/* ---- results ---- */
+.scorehero{
+  background:radial-gradient(120% 160% at 15% 0%,var(--plum-bright),var(--plum) 55%,var(--plum-deep));
+  color:#fff;border-radius:var(--r-lg);padding:26px 24px;margin-bottom:18px;
+  box-shadow:0 14px 30px rgba(71,11,110,.30);
+}
+.scorehero .eyebrow{background:rgba(255,255,255,.14);border-color:rgba(255,255,255,.25);color:#fff}
+.scorehero h2{color:#fff;margin-bottom:6px}
+.scorehero .score-line{display:flex;align-items:baseline;gap:4px;margin:14px 0 10px;font-variant-numeric:tabular-nums}
+.scorehero .score{font-size:64px;font-weight:800;line-height:1;letter-spacing:-.05em}
+.scorehero .score-unit{font-size:24px;font-weight:750}
+.scorehero p{font-size:14px;line-height:1.6;color:rgba(255,255,255,.85);margin:0;max-width:520px}
+.scorehero p b{color:#fff}
+.resulthead{background:#fff;border:1px solid var(--line);border-radius:var(--r-lg);padding:24px;margin-bottom:16px;box-shadow:var(--shadow-1)}
+.resulthead h2{margin-bottom:8px}
+.resulthead p{font-size:13px;color:var(--muted);line-height:1.6;margin:0}
+.resultintro{margin:0 0 18px}
+.resultintro p{font-size:13px;color:var(--muted);line-height:1.65;margin:5px 0 0}
+
+.results{display:grid;gap:12px;margin-top:14px}
+.resultCard{border:1px solid var(--line);border-radius:18px;padding:20px;background:#fff;box-shadow:var(--shadow-1)}
+.resultCard.prime{border-color:var(--plum-line);background:linear-gradient(180deg,var(--plum-tint),#fff 42%);box-shadow:var(--shadow-2)}
+.rank{display:grid;grid-template-columns:34px minmax(0,1fr) auto;gap:12px;align-items:start}
+.rank-num{width:28px;height:28px;border-radius:9px;background:#F1EDF6;color:var(--sub);display:grid;place-items:center;font-size:13px;font-weight:800}
+.resultCard.prime .rank-num{background:var(--plum);color:#fff}
+.rank-main{min-width:0}
+.rank-main h3{margin:2px 0 4px;font-size:19px}
+.tasknamep{font-size:13px;font-weight:650;color:var(--sub);margin:0 0 2px}
+.flowp{font-size:12px;color:var(--muted);line-height:1.55;margin:0}
+.rank-score{text-align:right;white-space:nowrap;font-variant-numeric:tabular-nums}
+.rank-score b{display:block;font-size:28px;font-weight:800;letter-spacing:-.04em;color:var(--plum)}
+.rank-score small{font-size:10px;color:var(--muted);font-weight:650}
+.typebadge{display:inline-block;margin-top:8px;font-size:11px;font-weight:750;border-radius:999px;padding:4px 9px}
+.typebadge.quick{background:var(--plum-tint);color:var(--plum)}
+.typebadge.foundation{background:var(--warn-tint);color:var(--warn)}
+.typebadge.easy{background:var(--green-tint);color:var(--green)}
+.typebadge.later{background:#F1EFF4;color:var(--muted)}
+.axisgrid{display:grid;grid-template-columns:repeat(3,1fr);gap:0;border-top:1px solid var(--line);margin-top:16px}
+.axis{padding:13px 0 0}
+.axis+.axis{padding-left:16px;border-left:1px solid var(--line)}
+.axis b{display:block;font-size:10px;color:var(--muted);margin-bottom:4px;font-weight:700}
+.axis strong{font-size:19px;font-weight:800;font-variant-numeric:tabular-nums}
+.axis small{display:block;font-size:10px;color:var(--muted);margin-top:3px}
+.reasonbox{margin-top:14px;border-top:1px solid var(--line);padding-top:6px}
+.reasonrow{display:grid;grid-template-columns:76px 1fr;gap:12px;padding:7px 0;font-size:12px;line-height:1.6}
+.reasonrow b{font-weight:750;color:var(--ink)}
+.reasonrow span{color:var(--muted)}
+.bar{height:5px;background:#EDE9F2;border-radius:999px;margin:16px 0;overflow:hidden}
+.bar i{display:block;height:100%;background:linear-gradient(90deg,var(--plum-bright),var(--plum));border-radius:999px}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:0;border-top:1px solid var(--line)}
+.mini{padding:12px 0 0}
+.mini+.mini{padding-left:16px;border-left:1px solid var(--line)}
+.mini b{display:block;font-size:10px;color:var(--muted);margin-bottom:4px;font-weight:700}
+.mini span{font-size:15px;font-weight:800;font-variant-numeric:tabular-nums}
+
+/* portfolio matrix */
+.portfolio{background:#fff;border:1px solid var(--line);border-radius:18px;padding:20px;margin:16px 0 6px;box-shadow:var(--shadow-1)}
+.portfoliohead{margin-bottom:14px}
+.portfoliohead h3{margin:0 0 5px}
+.portfoliohead p{font-size:12px;color:var(--muted);line-height:1.55;margin:0}
+.axisy{font-size:11px;color:var(--muted);font-weight:650;margin-bottom:6px}
+.axisx{font-size:11px;color:var(--muted);font-weight:650;text-align:right;margin-top:8px}
+.matrix{position:relative;height:320px;border-left:1.5px solid var(--line-strong);border-bottom:1.5px solid var(--line-strong);
+  background:linear-gradient(to right,transparent calc(50% - .5px),var(--line) 50%,transparent calc(50% + .5px)),
+             linear-gradient(to top,transparent calc(50% - .5px),var(--line) 50%,transparent calc(50% + .5px))}
+.quadlabel{position:absolute;font-size:11px;color:var(--muted);line-height:1.4}
+.quadlabel b{display:block;color:var(--sub);font-size:12px}
+.ql-q{right:12px;top:12px;text-align:right}.ql-f{left:12px;top:12px}.ql-e{right:12px;bottom:12px;text-align:right}.ql-l{left:12px;bottom:12px}
+.plotdot{position:absolute;width:28px;height:28px;border-radius:50%;background:#fff;border:2px solid var(--sub);display:grid;place-items:center;font-size:11px;font-weight:800;transform:translate(-50%,50%);z-index:3;font-variant-numeric:tabular-nums}
+.plotdot.top{background:var(--plum);border-color:var(--plum);color:#fff;box-shadow:0 4px 10px rgba(92,15,139,.35)}
+.plotdot.quick{border-color:var(--green);color:var(--green)}
+.plotlegend{margin-top:16px;border-top:1px solid var(--line)}
+.legendrow{display:grid;grid-template-columns:30px minmax(0,1fr) 64px 64px;gap:10px;padding:10px 0;border-bottom:1px solid var(--line);align-items:center;font-size:12px;font-variant-numeric:tabular-nums}
+.legendrow:last-child{border-bottom:0}
+.legendrow b{font-size:13px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.legendrow span{color:var(--muted)}
+.legendnum{font-weight:800;color:var(--plum)}
+
+.nextaction{margin-top:18px;padding:22px;border:1px solid var(--plum-line);background:linear-gradient(180deg,var(--plum-tint),#fff 70%);border-radius:18px}
+.nextaction h3{font-size:22px;margin-bottom:8px}
+.nextaction p{font-size:13px;color:var(--sub);line-height:1.65;margin:0 0 4px}
+.cta{margin-top:14px;background:#fff;border:1px solid var(--line);border-radius:18px;padding:20px;box-shadow:var(--shadow-1)}
+.cta h3{margin-bottom:8px}
+.cta p{font-size:13px;color:var(--sub);line-height:1.65;margin:0}
+
+/* toast + copy sheet */
+.toast{position:fixed;left:50%;bottom:26px;transform:translateX(-50%);background:rgba(32,24,39,.92);color:#fff;font-size:13px;font-weight:650;border-radius:999px;padding:11px 18px;z-index:90;animation:rise .25s ease both;max-width:88vw;text-align:center}
+.sheetback{position:fixed;inset:0;background:rgba(32,24,39,.45);z-index:80;display:flex;align-items:flex-end;justify-content:center}
+.sheet{background:#fff;border-radius:20px 20px 0 0;padding:20px 18px calc(18px + env(safe-area-inset-bottom));width:100%;max-width:720px;animation:rise .25s ease both}
+.sheet h3{font-size:16px;margin-bottom:6px}
+.sheet p{font-size:12px;color:var(--muted);margin:0 0 12px}
+.sheet textarea{width:100%;min-height:200px;border:1.5px solid var(--line-strong);border-radius:var(--r-md);padding:12px;font-size:12px;line-height:1.6;color:var(--sub);resize:vertical}
+
+@media(max-width:640px){
+  .wrap{padding:14px 12px 48px}
+  .card{padding:22px 16px;border-radius:18px;min-height:0}
+  .home-kicker{grid-template-columns:1fr 1fr;gap:8px}
+  .actions.nav{padding-bottom:calc(10px + env(safe-area-inset-bottom))}
+  .axisgrid{grid-template-columns:1fr}
+  .axis+.axis{padding-left:0;border-left:0;border-top:1px solid var(--line);padding-top:12px;margin-top:12px}
+  .matrix{height:280px}
+  .quadlabel{font-size:9px}.quadlabel b{font-size:10px}
+  .scorehero .score{font-size:56px}
+  .rank{grid-template-columns:30px minmax(0,1fr) auto;gap:10px}
+  .legendrow{grid-template-columns:26px minmax(0,1fr) 56px 56px}
+}
+</style>
+</head>
+<body>
+<div class="app">
+<header class="top">
+  <div class="topin">
+    <div class="brandrow" id="brandHome" role="button" tabindex="0" aria-label="처음 화면으로"><span class="logo">차</span><span class="brand" id="brandTitle">차팀장랩</span></div>
+    <div class="progress" role="progressbar" aria-label="진행률" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0" id="progressWrap"><i id="bar"></i></div>
+  </div>
+</header>
+<main class="wrap">
+  <section class="card" id="screen" aria-live="polite"></section>
+  <div class="footer">차팀장랩 · AI는 초안과 정리를 맡고, 중요한 판단과 최종 승인은 사람이 합니다.</div>
+</main>
+</div>
+
+<script>
+/* ================= 설정 =================
+   CTA_URL: 집중반 신청 페이지 링크를 넣으면 심층 결과 하단에 신청 버튼이 나타납니다.
+   KAKAO_URL: 오픈채팅/문의 링크(선택). 비워두면 버튼이 표시되지 않습니다. */
+const CTA_URL='';
+const KAKAO_URL='';
+
+const $=s=>document.querySelector(s);
+const esc=(s='')=>String(s).replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[m]));
+
+/* 받침 유무에 따라 은/는·이/가 등 조사를 고른다. 한글이 아니면 앞쪽(받침형)을 쓴다. */
+function josa(w,withBatchim,noBatchim){
+  const c=(w||'').trim().slice(-1),code=c.charCodeAt(0);
+  if(code>=0xAC00&&code<=0xD7A3)return (code-0xAC00)%28>0?withBatchim:noBatchim;
+  return withBatchim;
+}
+
+let mode='home';
+let freeState={step:0,workType:'',job:'',tasks:[],ti:0,qi:0};
+let classState={step:0,workType:'',industry:'',team:'',customer:'',tasks:[],ti:0,qi:0,inheritedFromFree:false};
+
+/* ---- 세션 복원: 새로고침해도 답변이 사라지지 않게 ---- */
+const STORE_KEY='chatimjang_diag_v13';
+function persist(){
+  try{sessionStorage.setItem(STORE_KEY,JSON.stringify({freeState,classState}));}catch(e){}
+}
+(function restore(){
+  try{
+    const d=JSON.parse(sessionStorage.getItem(STORE_KEY)||'null');
+    if(d&&d.freeState&&d.classState){Object.assign(freeState,d.freeState);Object.assign(classState,d.classState);}
+  }catch(e){}
+})();
+
+const freeQs=[
+ {k:'freq',t:'이 일은 얼마나 자주 하나요?',a:[['거의 매일',5],['주 2~4회',4],['주 1회',3],['월 2~3회',2],['가끔',1]]},
+ {k:'time',t:'한 번 할 때 얼마나 걸리나요?',a:[['10분 이하',1],['10~30분',2],['30~60분',3],['1~2시간',4],['2시간 이상',5]]},
+ {k:'rules',t:'매번 비슷한 기준으로 처리하나요?',a:[['거의 같은 기준',5],['대체로 비슷함',4],['절반 정도 비슷함',3],['상황마다 많이 다름',2],['매번 완전히 다름',1]]}
+];
+const classQs=[
+ ...freeQs,
+ {k:'data',t:'필요한 자료는 얼마나 정리돼 있나요?',a:[['한곳에 잘 정리됨',5],['몇 군데로 나뉨',4],['메신저·문서 등에 흩어짐',3],['대부분 머릿속에 있음',2],['자료가 거의 없음',1]]},
+ {k:'approval',t:'AI가 초안을 만들고 내가 확인하는 방식이 괜찮나요?',a:[['그 방식이면 충분함',5],['대부분 가능',4],['반반',3],['사람 판단이 훨씬 많음',2],['맡기기 어려움',1]]}
+];
+const deepOnlyQs=classQs.filter(q=>q.k==='data'||q.k==='approval');
+function classQuestionList(task){return task?.inheritedBasics?deepOnlyQs:classQs;}
+function totalClassQuestionCount(){return classState.tasks.reduce((s,t)=>s+classQuestionList(t).length,0);}
+function completedClassQuestionCount(ti,qi){
+  let done=0;for(let i=0;i<ti;i++)done+=classQuestionList(classState.tasks[i]).length;
+  return done+qi;
+}
+function minClassTasks(){return classState.inheritedFromFree?2:3;}
+
+const workTypes=[
+  ['1인사업자','혼자 또는 소규모로 사업을 운영해요'],
+  ['크리에이터','콘텐츠 제작과 채널 운영이 핵심이에요'],
+  ['일반 사업/팀','회사·매장·조직 안에서 함께 일해요'],
+  ['기타','위 유형에 딱 맞지 않아요']
+];
+const taskSuggestions={
+  '1인사업자':['고객 문의 답변','상담 후 미등록 고객 후속 연락','예약 확인·안내','재구매·재등록 안내','견적·청구·정산','매출·비용 정리','블로그·SNS 작성','반복 문자·카톡 발송'],
+  '크리에이터':['콘텐츠 레퍼런스 찾기','콘텐츠 아이디어·주제 정리','릴스·쇼츠 대본 작성','캡션 작성','댓글·DM 답변','협찬 메일 확인·답장','촬영 일정·콘텐츠 캘린더 관리','콘텐츠 재가공·업로드','게시물 성과 분석'],
+  '일반 사업/팀':['고객·회원 문의 답변','회의·업무 요청 정리','이메일 분류·답장 초안','일정·예약 안내','자료 취합·보고서 초안','매출·비용 정리','콘텐츠 초안 작성','반복 데이터 입력'],
+  '기타':['문의·메시지 답변','이메일 정리','일정 관리','자료 정리','콘텐츠 작성','반복 데이터 입력']
+};
+function multiTaskHtml(type,scope){
+  const items=taskSuggestions[type]||taskSuggestions['기타'];
+  const list=scope==='free'?freeState.tasks:classState.tasks;
+  const attr=scope==='free'?'data-toggle-free-task':'data-toggle-task';
+  const selected=new Set(list.map(t=>t.name));
+  return `<div class="suggestwrap"><div class="suggesttitle">해당되는 업무를 모두 선택하세요</div><div class="suggestions">${items.map(x=>{const on=selected.has(x);return `<button type="button" class="suggestchip ${on?'selected':''}" aria-pressed="${on}" ${attr}="${esc(x)}">${on?'✓':'+'} ${esc(x)}</button>`}).join('')}</div></div>`;
+}
+function workTypeHtml(current,scope){
+  return '<div class="choices">'+workTypes.map(x=>`<button class="choice ${current===x[0]?'selected':''}" aria-pressed="${current===x[0]}" data-choice data-scope="${scope}" data-key="workType" data-val="${x[0]}"><div><b>${x[0]}</b><small>${x[1]}</small></div><span class="dot">${current===x[0]?'✓':''}</span></button>`).join('')+'</div>';
+}
+function jobPlaceholder(type){
+  if(type==='1인사업자')return '예: 필라테스 센터 운영, 온라인 쇼핑몰, 1인 컨설팅';
+  if(type==='크리에이터')return '예: 인스타그램 뷰티 크리에이터, 유튜브, 공동구매';
+  if(type==='일반 사업/팀')return '예: 베이커리, 마케팅팀, 교육회사';
+  return '예: 하고 있는 일이나 업종을 짧게 적어주세요';
+}
+
+function taskJourneyHtml(tasks,currentIndex){
+  return `<div class="taskjourney" aria-label="업무 진행 상황">${tasks.map((t,i)=>{
+    const state=i<currentIndex?'done':i===currentIndex?'current':'';
+    const mark=i<currentIndex?'✓':i+1;
+    return `<div class="taskstep ${state}"><span class="stepnum">${mark}</span><span class="stepname">${esc(t.name)}</span></div>`;
+  }).join('')}</div>`;
+}
+function taskContextHtml(tasks,ti,qi,totalQuestions){
+  const t=tasks[ti],isNew=qi===0,prev=ti>0?tasks[ti-1]:null;
+  return `${taskJourneyHtml(tasks,ti)}<div class="taskcontext">
+    <div class="taskmeta"><span class="taskbadge">업무 ${ti+1} / ${tasks.length}</span><span class="questionbadge">질문 ${qi+1} / ${totalQuestions}</span></div>
+    <div class="tasklabel">지금 진단 중인 업무</div>
+    <div class="taskname">${esc(t.name)}</div>
+    ${isNew&&prev?`<div class="taskchange">✓ ‘${esc(prev.name)}’ 진단 완료 · 다음 업무로 넘어왔어요</div>`:''}
+  </div>`;
+}
+function contextualQuestion(taskName,key){
+  const n=`<span class="taskinline">‘${esc(taskName)}’</span>`;
+  const eunNeun=josa(taskName,'은','는');
+  if(key==='freq')return `${n}${eunNeun}<br>얼마나 자주 하나요?`;
+  if(key==='time')return `${n}${eunNeun}<br>한 번에 얼마나 걸리나요?`;
+  if(key==='rules')return `${n}${eunNeun}<br>매번 비슷한 기준으로 처리하나요?`;
+  if(key==='data')return `${n}에 필요한 자료는<br>얼마나 정리돼 있나요?`;
+  if(key==='approval')return `${n}${eunNeun}<br>AI 초안 + 내 확인 방식이 괜찮나요?`;
+  return '';
+}
+function nextDiagnosticLabel(tasks,ti,qi,totalQuestions){
+  const isLastQ=qi===totalQuestions-1,isLastTask=ti===tasks.length-1;
+  if(isLastQ&&isLastTask)return '결과 보기';
+  if(isLastQ&&!isLastTask)return `다음 업무: ${tasks[ti+1].name} →`;
+  return '다음 질문 →';
+}
+
+function roleFor(t){
+  let n=t.toLowerCase();
+  if(/레퍼런스|아이디어|주제|기획|대본/.test(n))return '콘텐츠 기획 AI 직원';
+  if(/협찬|브랜드|제안서|광고/.test(n))return '브랜드 협업 AI 직원';
+  if(/댓글|dm|디엠|커뮤니티/.test(n))return '커뮤니티 AI 직원';
+  if(/성과|인사이트|분석|리포트/.test(n))return '성과분석 AI 직원';
+  if(/상담 후|미등록|재등록|재구매|후속/.test(n))return '고객 후속관리 AI 직원';
+  if(/상담|문의|고객|회원|cs|답변/.test(n))return '고객관리 AI 직원';
+  if(/콘텐츠|인스타|블로그|릴스|쇼츠|유튜브|게시|캡션|업로드/.test(n))return '콘텐츠 제작 AI 직원';
+  if(/예약|일정|캘린더/.test(n))return '예약·일정관리 AI 직원';
+  if(/메일|이메일/.test(n))return '메일비서 AI 직원';
+  if(/정산|매출|비용|결제|견적|청구/.test(n))return '사업 운영 AI 직원';
+  return '업무보조 AI 직원';
+}
+function flowFor(t){
+  let n=t.toLowerCase();
+  if(/레퍼런스|아이디어|주제|기획|대본/.test(n))return '레퍼런스 → 핵심 포인트 → 주제 → 기획·대본 초안 → 사람 검수';
+  if(/협찬|브랜드|제안서|광고/.test(n))return '협업 요청 → 조건 추출 → 우선순위 → 답변·제안 초안 → 일정 기록';
+  if(/댓글|dm|디엠|커뮤니티/.test(n))return '댓글·DM → 유형 분류 → 답변 필요 판단 → 초안 → 확인';
+  if(/성과|인사이트|분석|리포트/.test(n))return '성과 데이터 → 비교 → 이상·기회 탐색 → 요약 → 다음 콘텐츠 제안';
+  if(/상담 후|미등록|재등록|재구매|후속/.test(n))return '상담·고객정보 → 대상 분류 → 연락 시점 판단 → 메시지 초안 → 기록';
+  if(/상담|문의|고객|회원|cs|답변/.test(n))return '원문 → 분류 → 우선순위 → 답변 초안 → 사람 확인';
+  if(/콘텐츠|인스타|블로그|릴스|쇼츠|유튜브|게시|캡션|업로드/.test(n))return '자료 → 주제 → 기획 → 제작 초안 → 검수·업로드';
+  if(/예약|일정|캘린더/.test(n))return '예약·일정정보 → 조건 확인 → 대상 분류 → 안내 초안 → 기록';
+  if(/메일|이메일/.test(n))return '메일 → 중요도 분류 → 답장 필요 판단 → 초안 → 확인';
+  if(/정산|매출|비용|결제|견적|청구/.test(n))return '운영 데이터 → 항목 분류 → 계산·요약 → 확인 → 저장';
+  return '입력자료 → 기준 판단 → 결과 초안 → 사람 확인 → 저장';
+}
+function pct(v){return Math.max(0,Math.min(100,Math.round(v)))}
+function deepMetrics(t){
+  const s=t.s||{};
+  const impact=pct((((s.freq||0)*.55+(s.time||0)*.45)/5)*100);
+  const readiness=pct((((s.rules||0)*.45+(s.data||0)*.35+(s.approval||0)*.20)/5)*100);
+  const reviewBurden=pct(100-((s.approval||0)/5*100));
+  const priority=pct(impact*.55+readiness*.45);
+  let type='Later · 뒤로 미루기',typeShort='later';
+  if(impact>=60&&readiness>=60){type='Quick Win · 바로 구축 후보';typeShort='quick'}
+  else if(impact>=60&&readiness<60){type='Foundation · 효과는 크지만 정리 선행';typeShort='foundation'}
+  else if(impact<60&&readiness>=60){type='Easy Win · 작게 빠르게 시작';typeShort='easy'}
+  return {impact,readiness,reviewBurden,priority,type,typeShort};
+}
+function burdenLabel(v){return v<=25?'낮음':v<=55?'보통':'높음'}
+function whyRank(t){
+  const s=t.s||{},reasons=[];
+  if((s.freq||0)>=4)reasons.push('반복 빈도가 높아 누적 효과가 큽니다.');
+  if((s.time||0)>=4)reasons.push('한 번에 드는 시간이 길어 줄였을 때 체감이 큽니다.');
+  if((s.rules||0)>=4)reasons.push('처리 기준이 반복돼 AI에게 규칙을 넘기기 좋습니다.');
+  if((s.data||0)>=4)reasons.push('필요한 자료가 비교적 정리돼 있어 시작이 빠릅니다.');
+  if((s.approval||0)>=4)reasons.push('AI 초안 후 사람이 확인하는 구조와 잘 맞습니다.');
+  if(!reasons.length)reasons.push('효과와 준비도를 함께 비교했을 때 다른 후보보다 우선순위가 높았습니다.');
+  return reasons.slice(0,2).join(' ');
+}
+function bottleneck(t){
+  const s=t.s||{};
+  const vals=[['판단 기준 문서화',s.rules||0],['입력자료 정리',s.data||0],['사람 승인 범위 정의',s.approval||0]].sort((a,b)=>a[1]-b[1]);
+  if(vals[0][1]>=4)return '큰 선행 작업 없이 작은 범위부터 테스트할 수 있습니다.';
+  return `${vals[0][0]}부터 보완하면 구축 성공률이 올라갑니다.`;
+}
+function deepResultCard(t,i){
+  const m=deepMetrics(t);
+  return `<div class="resultCard ${i===0?'prime':''}">
+    <div class="rank">
+      <span class="rank-num">${i+1}</span>
+      <div class="rank-main"><h3>${roleFor(t.name)}</h3><p class="tasknamep">${esc(t.name)}</p><span class="typebadge ${m.typeShort}">${m.type}</span></div>
+      <div class="rank-score"><b>${m.priority}</b><small>우선순위</small></div>
+    </div>
+    <div class="axisgrid">
+      <div class="axis"><b>효과 잠재력</b><strong>${m.impact}</strong><small>빈도 + 소요시간</small></div>
+      <div class="axis"><b>시스템화 준비도</b><strong>${m.readiness}</strong><small>기준 + 자료 + 검수</small></div>
+      <div class="axis"><b>사람 검수 부담</b><strong>${burdenLabel(m.reviewBurden)}</strong><small>${m.reviewBurden}%</small></div>
+    </div>
+    <div class="reasonbox">
+      <div class="reasonrow"><b>왜 이 순위?</b><span>${whyRank(t)}</span></div>
+      <div class="reasonrow"><b>먼저 보완</b><span>${bottleneck(t)}</span></div>
+      <div class="reasonrow"><b>첫 구축 흐름</b><span>${flowFor(t.name)}</span></div>
+    </div>
+  </div>`;
+}
+function portfolioHtml(tasks){
+  const ranked=[...tasks].sort((a,b)=>b.score-a.score);
+  const dots=ranked.map((t,i)=>{const m=deepMetrics(t);const cls=i===0?'top':(m.impact>=60&&m.readiness>=60?'quick':'');return `<span class="plotdot ${cls}" style="left:${Math.max(6,Math.min(94,m.readiness))}%;bottom:${Math.max(6,Math.min(94,m.impact))}%" title="${esc(t.name)} · 효과 ${m.impact} · 준비도 ${m.readiness}">${i+1}</span>`}).join('');
+  const legend=ranked.map((t,i)=>{const m=deepMetrics(t);return `<div class="legendrow"><span class="legendnum">${i+1}</span><b>${esc(t.name)}</b><span>효과 ${m.impact}</span><span>준비 ${m.readiness}</span></div>`}).join('');
+  return `<div class="portfolio"><div class="portfoliohead"><h3>업무 포트폴리오</h3><p>오른쪽 위에 가까울수록 <b>효과가 크고 지금 만들기 쉬운 업무</b>입니다. 1순위는 보라색으로 표시합니다.</p></div><div class="axisy">효과 잠재력 ↑</div><div class="matrix"><span class="quadlabel ql-q"><b>Quick Win</b>먼저 구축</span><span class="quadlabel ql-f"><b>Foundation</b>정리 후 구축</span><span class="quadlabel ql-e"><b>Easy Win</b>작게 빠르게</span><span class="quadlabel ql-l"><b>Later</b>뒤로 미루기</span>${dots}</div><div class="axisx">시스템화 준비도 →</div><div class="plotlegend">${legend}</div></div>`;
+}
+function topDesignSummary(){
+  const t=calcClass()[0];if(!t)return '';
+  const m=deepMetrics(t);
+  return `[1순위 AI 업무 설계 초안]\n업무: ${t.name}\nAI 직원: ${roleFor(t.name)}\n우선순위: ${m.priority}점 / ${m.type}\n효과 잠재력: ${m.impact}\n시스템화 준비도: ${m.readiness}\n사람 검수 부담: ${burdenLabel(m.reviewBurden)}\n\n왜 1순위인가\n- ${whyRank(t)}\n\n먼저 보완할 것\n- ${bottleneck(t)}\n\n첫 구축 흐름\n- ${flowFor(t.name)}`;
+}
+
+/* ---- toast & copy sheet (alert 대체) ---- */
+function toast(msg){
+  document.querySelectorAll('.toast').forEach(t=>t.remove());
+  const el=document.createElement('div');el.className='toast';el.textContent=msg;
+  document.body.appendChild(el);
+  setTimeout(()=>el.remove(),2400);
+}
+function showCopySheet(text,title='진단 결과'){
+  const back=document.createElement('div');back.className='sheetback';
+  back.innerHTML=`<div class="sheet"><h3>${esc(title)}</h3><p>자동 복사가 제한된 브라우저예요. 아래 내용을 길게 눌러 직접 복사해주세요.</p><textarea readonly>${esc(text)}</textarea><div class="actions"><button class="btn primary block" data-sheet-close>닫기</button></div></div>`;
+  back.addEventListener('click',e=>{if(e.target===back||e.target.closest('[data-sheet-close]'))back.remove();});
+  document.body.appendChild(back);
+  const ta=back.querySelector('textarea');ta.focus();ta.select();
+}
+async function copyText(text,title){
+  try{await navigator.clipboard.writeText(text);toast('복사했어요. 필요한 곳에 붙여넣으세요.');}
+  catch(e){showCopySheet(text,title);}
+}
+
+let pendingScrollRestore=null,skipAnim=false,autoTimer=null;
+function preserveScrollForNextRender(){pendingScrollRestore={y:window.scrollY};skipAnim=true;}
+function renderPreservingScroll(){preserveScrollForNextRender();render();}
+function setScreen(html,pctVal=0,title='차팀장랩'){
+  const restore=pendingScrollRestore;pendingScrollRestore=null;
+  const anim=skipAnim?'':'fadein';skipAnim=false;
+  $('#screen').innerHTML=`<div class="${anim}">${html}</div>`;
+  $('#bar').style.width=pctVal+'%';
+  $('#progressWrap').setAttribute('aria-valuenow',pctVal);
+  $('#brandTitle').textContent=title;
+  if(restore){requestAnimationFrame(()=>window.scrollTo({top:restore.y,behavior:'instant'}));}
+  else{window.scrollTo({top:0,behavior:'instant'});}
+}
+function choiceHtml(items,key,current,scope){
+  return '<div class="choices">'+items.map(x=>{const sel=String(current)==String(x[1]);return `<button class="choice ${sel?'selected':''}" aria-pressed="${sel}" data-choice data-scope="${scope}" data-key="${key}" data-val="${x[1]}"><div><b>${x[0]}</b></div><span class="dot">${sel?'✓':''}</span></button>`}).join('')+'</div>';
+}
+function navHtml(label='다음',disabled=false){
+  return `<div class="actions nav"><button class="btn ghost" data-back>이전</button><button class="btn primary" data-next ${disabled?'disabled':''}>${label}</button></div>`;
+}
+function bindGlobal(){
+  document.querySelectorAll('[data-choice]').forEach(btn=>{
+    btn.onclick=()=>{
+      const scope=btn.dataset.scope,key=btn.dataset.key,raw=btn.dataset.val;
+      const val=!isNaN(Number(raw))&&raw.trim()!==''?Number(raw):raw;
+      if(scope==='free')freeState[key]=val;
+      else if(scope==='free-task')freeState.tasks[freeState.ti].s[key]=val;
+      else if(scope==='class-profile')classState[key]=raw;
+      else classState.tasks[classState.ti].s[key]=val;
+      renderPreservingScroll();
+      /* 선택 즉시 다음으로 — 앱처럼 흐르게. 320ms 동안 선택 피드백을 보여준 뒤 이동 */
+      clearTimeout(autoTimer);
+      autoTimer=setTimeout(()=>{autoTimer=null;goNext();},320);
+    }
+  });
+  document.querySelectorAll('[data-toggle-task]').forEach(btn=>{btn.onclick=()=>toggleTask(btn.dataset.toggleTask);});
+  document.querySelectorAll('[data-remove-task]').forEach(btn=>{
+    btn.onclick=()=>{const i=Number(btn.dataset.removeTask);
+      if(Number.isInteger(i)&&i>=0&&i<classState.tasks.length){classState.tasks.splice(i,1);renderPreservingScroll();}};
+  });
+  document.querySelectorAll('[data-toggle-free-task]').forEach(btn=>{btn.onclick=()=>toggleFreeTask(btn.dataset.toggleFreeTask);});
+  document.querySelectorAll('[data-remove-free-task]').forEach(btn=>{
+    btn.onclick=()=>{const i=Number(btn.dataset.removeFreeTask);
+      if(Number.isInteger(i)&&i>=0&&i<freeState.tasks.length){freeState.tasks.splice(i,1);renderPreservingScroll();}};
+  });
+  function bindEnter(el,action,{allowEmpty=false}={}){
+    if(!el)return;
+    let composing=false,pending=false,lastRun=0;
+    const run=()=>{
+      if(!allowEmpty&&!el.value.trim())return;
+      const now=Date.now();if(now-lastRun<250)return;lastRun=now;
+      action();
+    };
+    el.addEventListener('compositionstart',()=>{composing=true});
+    el.addEventListener('compositionend',()=>{composing=false;if(pending){pending=false;setTimeout(run,0)}});
+    el.addEventListener('keydown',e=>{
+      if(e.key!=='Enter'&&e.keyCode!==13)return;
+      e.preventDefault();
+      if(composing||e.isComposing||e.keyCode===229){
+        pending=true;
+        setTimeout(()=>{if(pending&&!composing){pending=false;run()}},80);
+      }else run();
+    },true);
+    el.addEventListener('keyup',e=>{
+      if((e.key==='Enter'||e.keyCode===13)&&!composing){e.preventDefault();run();}
+    });
+  }
+  ['job','industry','customer'].forEach(id=>{
+    const el=$('#'+id);
+    if(el){
+      const sync=()=>{const n=$('[data-next]');if(n&&id!=='customer')n.disabled=!el.value.trim();};
+      el.addEventListener('input',sync);
+      bindEnter(el,goNext,{allowEmpty:id==='customer'});
+      sync();
+    }
+  });
+  bindEnter($('#freetaskin'),addFreeTask);
+  bindEnter($('#taskin'),addTask);
+  document.onkeydown=e=>{
+    if(e.key!=='Enter'&&e.keyCode!==13)return;
+    const target=e.target;
+    if(target&&target.closest&&target.closest('input,textarea,select,a,button'))return;
+    const next=$('[data-next]'),selected=$('[data-choice].selected');
+    if(!next||next.disabled||!selected)return;
+    e.preventDefault();
+    clearTimeout(autoTimer);autoTimer=null;
+    goNext();
+  };
+  const deepFromFree=$('[data-deep-from-free]');
+  if(deepFromFree)deepFromFree.onclick=()=>{
+    classState={
+      step:0,workType:freeState.workType,industry:freeState.job,team:'',customer:'',
+      tasks:freeState.tasks.map(t=>({name:t.name,s:{...t.s},inheritedBasics:true})),
+      ti:0,qi:0,inheritedFromFree:true
+    };
+    location.hash='class';
+  };
+  const editInherited=$('[data-edit-inherited]');
+  if(editInherited)editInherited.onclick=()=>{classState.inheritedFromFree=false;classState.step=1;render();};
+  const b=$('[data-back]');if(b)b.onclick=goBack;
+  const n=$('[data-next]');if(n)n.onclick=()=>{clearTimeout(autoTimer);autoTimer=null;goNext();};
+  const st=$('[data-start]');if(st)st.onclick=()=>{if(mode==='free')freeState.step=1;else classState.step=classState.inheritedFromFree?3:1;render();};
+  const add=$('[data-add]');if(add)add.onclick=addTask;
+  const addFree=$('[data-add-free]');if(addFree)addFree.onclick=addFreeTask;
+  const copy=$('[data-copy]');if(copy)copy.onclick=()=>copyText(classSummary(),'전체 진단 결과');
+  const copyTop=$('[data-copy-top]');if(copyTop)copyTop.onclick=()=>copyText(topDesignSummary(),'1순위 업무 설계안');
+  document.querySelectorAll('[data-home]').forEach(h=>{h.onclick=()=>{location.hash='';};});
+}
+function home(){
+  setScreen(`<div class="home-hero">
+    <span class="eyebrow">AI EMPLOYEE DIAGNOSIS</span>
+    <h1>AI부터 배우기 전에,<br>내가 넘길 일부터.</h1>
+    <p class="lead">반복업무를 비교해 지금 어떤 일을 AI에게 먼저 맡길지 찾고, 심층진단에서는 실제 구축 순서까지 정합니다.</p>
+    <div class="home-kicker">
+      <div><b>무료 진단</b><span>반복업무 1~5개를 빠르게 비교</span></div>
+      <div><b>심층 진단</b><span>효과 × 준비도로 TOP3 산출</span></div>
+    </div>
+    <div class="modecards">
+      <a class="modecard primary" href="#free"><span class="tag">무료 · 약 3~5분</span><h2>먼저 뽑아야 할 AI 직원 찾기</h2><p>지금 반복하는 일 중 무엇부터 맡기면 체감이 큰지 비교합니다.</p><span class="go">시작 →</span></a>
+      <a class="modecard" href="#class"><span class="tag">심층 · 약 5~8분</span><h2>업무 시스템 심층 진단</h2><p>효과 잠재력과 시스템화 준비도를 나눠 실제 구축 순서를 정합니다.</p><span class="go">시작 →</span></a>
+    </div>
+  </div>`,0,'차팀장랩');
+}
+function renderFree(){
+  const s=freeState.step;
+  if(s===0)setScreen(`<span class="eyebrow">무료 진단 · 약 3~5분</span><h1>먼저 맡길 일을<br>고르는 진단.</h1><p class="lead">‘뭘 자동화하지?’를 생각해내는 대신, 실제 반복업무를 고르고 빈도·시간·반복기준만 답하면 됩니다.</p><div class="note"><b>결과</b><br>가장 먼저 맡길 후보 1개와 함께 비교한 다음 후보를 보여드립니다. 심층진단으로 이어가면 앞 답변은 다시 묻지 않습니다.</div><div class="actions nav"><button class="btn ghost" data-home>처음으로</button><button class="btn primary" data-start>무료 진단 시작 →</button></div>`,2,'무료 AI 직원 진단');
+  else if(s===1)setScreen(`<span class="eyebrow">1 / 3 · 기본정보</span><h2>어떤 방식으로<br>일하고 있나요?</h2><p class="sub">직군에 따라 반복업무 예시를 다르게 보여드릴게요.</p>${workTypeHtml(freeState.workType,'free')}${navHtml('다음',!freeState.workType)}`,12,'무료 AI 직원 진단');
+  else if(s===2)setScreen(`<span class="eyebrow">2 / 3 · 기본정보</span><h2>구체적으로 어떤 일을<br>하고 계세요?</h2><div class="field"><input id="job" enterkeyhint="next" value="${esc(freeState.job)}" placeholder="${esc(jobPlaceholder(freeState.workType))}"></div>${navHtml('다음',!freeState.job)}`,24,'무료 AI 직원 진단');
+  else if(s===3){
+    const count=freeState.tasks.length;
+    const selected=freeState.tasks.map((t,i)=>`<button type="button" class="selectedtask" data-remove-free-task="${i}" aria-label="${esc(t.name)} 선택 해제">${i+1}. ${esc(t.name)} <span>×</span></button>`).join('');
+    const limit=count>=5?'<div class="limitwarn">빠른 진단은 최대 5개까지 비교해요. 다른 업무를 고르려면 하나를 해제해주세요.</div>':'';
+    setScreen(`<span class="eyebrow">3 / 3 · 반복업무 선택 · ${esc(freeState.workType)}</span><h2>지난 일주일,<br>반복했던 일을 모두 골라주세요.</h2><p class="sub">여러 개를 고르면 다음 화면에서 선택한 업무마다 빈도·시간·반복기준을 확인해 서로 비교합니다.</p><div class="selectionstatus"><b>현재 ${count}개 선택됨</b><span>최소 1개 · 최대 5개</span></div>${multiTaskHtml(freeState.workType,'free')}${limit}<div class="helperline">목록에 없는 업무는 직접 추가할 수 있어요.</div><div class="field"><input id="freetaskin" enterkeyhint="done" placeholder="예: ${(taskSuggestions[freeState.workType]||taskSuggestions['기타'])[0]}"></div><div class="actions"><button class="btn ghost" data-add-free ${count>=5?'disabled':''}>+ 직접 업무 추가</button></div>${selected?`<div class="selectedlist">${selected}</div>`:''}${navHtml(`${count}개 업무 빠른 진단 →`,count<1)}`,38,'무료 AI 직원 진단');
+  }
+  else if(s===4){
+    const t=freeState.tasks[freeState.ti],q=freeQs[freeState.qi],done=freeState.ti*freeQs.length+freeState.qi;
+    const p=44+Math.round(done/(freeState.tasks.length*freeQs.length)*44);
+    const nextLabel=nextDiagnosticLabel(freeState.tasks,freeState.ti,freeState.qi,freeQs.length);
+    const nextHint=freeState.qi===freeQs.length-1&&freeState.ti<freeState.tasks.length-1?`<div class="nexttaskhint">이 질문이 끝나면 ‘${esc(freeState.tasks[freeState.ti+1].name)}’ 진단으로 넘어갑니다.</div>`:'';
+    setScreen(`${taskContextHtml(freeState.tasks,freeState.ti,freeState.qi,freeQs.length)}<h2 class="contextquestion">${contextualQuestion(t.name,q.k)}</h2>${choiceHtml(q.a,q.k,t.s[q.k],'free-task')}<div class="keyhint">옵션을 고르면 자동으로 넘어갑니다. <kbd>Enter</kbd>로도 이동할 수 있어요.</div>${nextHint}${navHtml(nextLabel,!t.s[q.k])}`,p,'무료 AI 직원 진단');
+  }
+  else{
+    const ranked=calcFree(),top=ranked[0],others=ranked.slice(1,3);
+    const othersHtml=others.length?`<h3 class="secthead">함께 비교한 다음 후보</h3><div class="results">${others.map((t,i)=>`<div class="resultCard"><div class="rank"><span class="rank-num">${i+2}</span><div class="rank-main"><h3>${roleFor(t.name)}</h3><p class="tasknamep">${esc(t.name)}</p></div><div class="rank-score"><b>${t.score}</b><small>점수</small></div></div></div>`).join('')}</div>`:'';
+    setScreen(`<div class="scorehero"><span class="eyebrow">무료 빠른 진단 결과 · ${esc(freeState.workType)}</span><h2>가장 먼저 검토할 AI 직원</h2><div class="score-line"><span class="score">${top?.score||0}</span><span class="score-unit">점</span></div><p><b>${esc(top?.name||'-')}</b> 업무가 입력한 업무 중 가장 먼저 AI에게 맡겨볼 후보로 나왔습니다.</p></div>
+    <div class="resultCard prime"><div class="rank"><span class="rank-num">1</span><div class="rank-main"><h3>${roleFor(top?.name||'')}</h3><p class="tasknamep">${esc(top?.name||'-')}</p><p class="flowp">${flowFor(top?.name||'')}</p></div></div><div class="bar"><i style="width:${top?.score||0}%"></i></div><div class="grid2"><div class="mini"><b>반복기준 명확도</b><span>${top?.ready||0}%</span></div><div class="mini"><b>시간절감 잠재력</b><span>${top?.potential||0}%</span></div></div></div>
+    ${othersHtml}
+    <div class="nextaction"><h3>빠른 진단은 여기까지 봅니다.</h3><p>실제 구축 우선순위는 자료 준비도와 사람 검수 가능성까지 함께 봐야 달라질 수 있어요. 심층진단에서는 앞에서 답한 3개 기준은 그대로 쓰고, <b>2개 질문만 더</b> 확인합니다.</p><div class="actions"><button class="btn primary block" data-deep-from-free>답변 그대로 이어서 심층진단 →</button></div></div>
+    <div class="actions"><button class="btn ghost" data-home>처음으로</button></div>`,100,'무료 AI 직원 진단');
+  }
+}
+function renderClass(){
+  const s=classState.step;
+  const inherited=classState.inheritedFromFree&&classState.workType;
+  if(s===0)setScreen(`<span class="eyebrow">심층 진단 · 약 5~8분</span><h1>무엇부터 만들지<br>결정하는 진단.</h1><p class="lead">효과가 큰 일과 실제로 만들기 쉬운 일을 분리해서 봅니다. 결과는 단순 점수가 아니라 <b>Quick Win / Foundation / Easy Win / Later</b>로 해석됩니다.</p><div class="resultintro" style="margin-top:18px"><b>분석 기준</b><p>효과 잠재력: 빈도 + 소요시간 · 시스템화 준비도: 반복기준 + 자료상태 + 사람검수 가능성</p></div>${inherited?`<div class="carryover"><span class="carrychip">✓ 무료 진단 정보 이어받음</span><strong>${esc(classState.workType)}</strong><span>${esc(classState.industry||'업무 정보')} · ${classState.tasks.length}개 업무의 빈도·시간·반복기준 답변을 그대로 사용합니다.</span></div>`:`<div class="note">최종 결과는 ‘AI를 뭘 배울까?’가 아니라 <b>내 업무에서 무엇부터 실제로 만들까?</b>를 결정하는 데 사용합니다.</div>`}<div class="actions nav"><button class="btn ghost" data-home>처음으로</button><button class="btn primary" data-start>${inherited?'앞 답변 이어서 분석하기 →':'심층 분석 시작 →'}</button></div>${inherited?'<div class="actions" style="margin-top:8px"><button class="btn ghost block" data-edit-inherited>직군·업무 수정</button></div>':''}`,2,'수강 전 심층진단');
+  else if(s===1)setScreen(`<span class="eyebrow">기본정보 1 / 4</span><h2>어떤 방식으로<br>일하고 있나요?</h2><p class="sub">선택한 직군에 맞춰 반복업무 후보를 보여드립니다.</p>${workTypeHtml(classState.workType,'class-profile')}${navHtml('다음',!classState.workType)}`,7,'수강 전 심층진단');
+  else if(s===2)setScreen(`<span class="eyebrow">기본정보 2 / 4</span><h2>구체적으로 어떤 일을<br>하고 계세요?</h2><div class="field"><input id="industry" enterkeyhint="next" value="${esc(classState.industry)}" placeholder="${esc(jobPlaceholder(classState.workType))}"></div>${navHtml('다음',!classState.industry)}`,13,'수강 전 심층진단');
+  else if(s===3)setScreen(`<span class="eyebrow">${inherited?'심층정보 1 / 2':'기본정보 3 / 4'}</span>${inherited?`<div class="carrychip">✓ ${esc(classState.workType)} 정보 이어받음</div>`:''}<h2>몇 명이 함께 일하나요?</h2>${choiceHtml([['혼자 운영','혼자 운영'],['2~5명','2~5명'],['6명 이상','6명 이상']],'team',classState.team,'class-profile')}${navHtml('다음',!classState.team)}`,18,'수강 전 심층진단');
+  else if(s===4)setScreen(`<span class="eyebrow">${inherited?'심층정보 2 / 2':'기본정보 4 / 4'}</span>${inherited?`<div class="carrychip">✓ ${esc(classState.workType)} · ${esc(classState.industry)}</div>`:''}<h2>주로 누구를 상대하나요?</h2><p class="sub">건너뛰어도 괜찮아요.</p><div class="field"><input id="customer" enterkeyhint="next" value="${esc(classState.customer)}" placeholder="예: 30~50대 여성 회원, 브랜드 담당자, 기업 고객"></div>${navHtml()}`,23,'수강 전 심층진단');
+  else if(s===5){
+    const count=classState.tasks.length,minT=minClassTasks();
+    const selected=classState.tasks.map((t,i)=>`<button type="button" class="selectedtask" data-remove-task="${i}" aria-label="${esc(t.name)} 선택 해제">${i+1}. ${esc(t.name)} <span>×</span></button>`).join('');
+    const limit=count>=8?'<div class="limitwarn">최대 8개까지 선택할 수 있어요. 다른 업무를 선택하려면 하나를 해제해주세요.</div>':'';
+    setScreen(`<span class="eyebrow">반복업무 선택 · ${esc(classState.workType)}</span>${inherited?'<div class="carrychip">✓ 무료 진단 업무 + 빈도·시간·반복기준 답변을 이어받았어요</div>':''}<h2>${inherited?'심층진단할 업무를<br>확인해주세요.':'지난 일주일,<br>반복했던 일을 모두 골라주세요.'}</h2><p class="sub">${inherited?'앞에서 선택한 업무와 이미 답한 3개 기준을 그대로 가져왔습니다. 기존 업무는 심층 기준 2개만 추가로 확인하고, 새로 추가한 업무는 5개 기준을 모두 확인합니다.':'정확하지 않아도 괜찮아요. 해당되는 업무를 여러 개 선택하면 다음 화면에서 업무별로 하나씩 진단합니다.'}</p><div class="selectionstatus"><b>현재 ${count}개 선택됨</b><span>최소 ${minT}개 · 최대 8개</span></div>${multiTaskHtml(classState.workType,'class')}${limit}<div class="helperline">목록에 없는 업무가 있다면 직접 추가하세요.</div><div class="field"><input id="taskin" enterkeyhint="done" placeholder="예: ${(taskSuggestions[classState.workType]||taskSuggestions['기타'])[0]}"></div><div class="actions"><button class="btn ghost" data-add ${count>=8?'disabled':''}>+ 직접 업무 추가</button></div>${selected?`<div class="selectedlist">${selected}</div>`:''}<div class="microcta"><b>다음 단계에서 무엇을 비교하나요?</b><br>선택한 업무마다 효과와 구축 준비도를 비교해 ‘시간은 많이 먹지만 정리부터 필요한 일’과 ‘지금 바로 만들기 좋은 일’을 구분합니다.</div>${navHtml(`${count}개 업무 분석 시작 →`,count<minT)}`,29,'수강 전 심층진단');
+  }else if(s===6){
+    const t=classState.tasks[classState.ti],qList=classQuestionList(t),q=qList[classState.qi];
+    const done=completedClassQuestionCount(classState.ti,classState.qi),total=totalClassQuestionCount();
+    const p=32+Math.round(done/Math.max(total,1)*56);
+    const nextLabel=nextDiagnosticLabel(classState.tasks,classState.ti,classState.qi,qList.length);
+    const nextHint=classState.qi===qList.length-1&&classState.ti<classState.tasks.length-1?`<div class="nexttaskhint">이 질문이 끝나면 ‘${esc(classState.tasks[classState.ti+1].name)}’ 진단으로 넘어갑니다.</div>`:'';
+    const inheritedNote=t.inheritedBasics?`<div class="carrychip">✓ 무료에서 빈도·소요시간·반복기준 3개 답변 승계 · 심층 질문 ${classState.qi+1} / ${qList.length}</div>`:'';
+    setScreen(`${taskContextHtml(classState.tasks,classState.ti,classState.qi,qList.length)}${inheritedNote}<h2 class="contextquestion">${contextualQuestion(t.name,q.k)}</h2>${choiceHtml(q.a,q.k,t.s[q.k],'class-task')}<div class="keyhint">옵션을 고르면 자동으로 넘어갑니다. <kbd>Enter</kbd>로도 이동할 수 있어요.</div>${nextHint}${navHtml(nextLabel,!t.s[q.k])}`,p,'수강 전 심층진단');
+  }else{
+    const ranked=calcClass(),top=ranked.slice(0,3),first=top[0],firstM=first?deepMetrics(first):null;
+    const cards=top.map((t,i)=>deepResultCard(t,i)).join('');
+    const ctaBtns=[
+      CTA_URL?`<a class="btn primary block" href="${esc(CTA_URL)}" target="_blank" rel="noopener">차팀장 집중반 신청하기 →</a>`:'',
+      KAKAO_URL?`<a class="btn ghost block" href="${esc(KAKAO_URL)}" target="_blank" rel="noopener">궁금한 점 물어보기</a>`:''
+    ].filter(Boolean).join('');
+    setScreen(`<div class="resulthead"><span class="eyebrow">심층 분석 결과 · ${esc(classState.workType)}</span><h2>${esc(classState.industry)}에서<br>먼저 구축할 TOP3</h2><p>${classState.tasks.length}개 업무를 ‘효과’와 ‘구축 준비도’를 분리해 비교했습니다. 점수가 높은 이유와 선행 조건까지 함께 보세요.</p></div>
+    <div class="resultintro"><b>이 결과를 읽는 기준</b><p><b>효과 잠재력</b>은 빈도·소요시간, <b>시스템화 준비도</b>는 반복 기준·자료 상태·사람 검수 가능성을 봅니다. 최종 우선순위는 효과 55% + 준비도 45%로 계산합니다.</p></div>
+    ${portfolioHtml(ranked)}
+    <div class="results">${cards}</div>
+    <div class="nextaction"><span class="eyebrow">NEXT ACTION</span><h3>${first?`1순위 ‘${esc(first.name)}’부터 작게 구축하세요.`:'1순위부터 작게 구축하세요.'}</h3><p>${firstM?`${firstM.type}. ${bottleneck(first)}`:''}<br>진단에서 끝내지 않고 입력자료 → 판단기준 → 초안 → 사람확인 → 저장 흐름으로 실제 업무 시스템을 만듭니다.</p><div class="actions"><button class="btn primary block" data-copy-top>1순위 업무 설계안 복사 →</button><button class="btn ghost" data-copy>전체 결과 복사</button></div></div>
+    <div class="cta"><h3>차팀장 집중반에서는 여기서 시작합니다.</h3><p><b>1순위 실제 구축 → 직접 재실행 → 오류 수정 → 2·3순위로 확장.</b><br>이 결과를 가져오면 “AI를 뭘 배울지”가 아니라 “내 업무에서 무엇을 만들지”부터 시작할 수 있습니다.</p>${ctaBtns?`<div class="actions">${ctaBtns}</div>`:''}</div>
+    <div class="actions"><button class="btn ghost" data-home>처음으로</button></div>`,100,'수강 전 심층진단');
+  }
+}
+function calcFree(){
+  freeState.tasks.forEach(t=>{
+    const s=t.s;
+    t.score=Math.round((s.freq*30+s.time*25+s.rules*30+4*15)/5);
+    t.ready=Math.round((s.rules||0)/5*100);
+    t.potential=Math.round(((s.freq||0)+(s.time||0))/10*100);
+  });
+  return [...freeState.tasks].sort((a,b)=>b.score-a.score);
+}
+function calcClass(){
+  classState.tasks.forEach(t=>{
+    const m=deepMetrics(t);
+    t.score=m.priority;t.ready=m.readiness;t.potential=m.impact;t.reviewBurden=m.reviewBurden;t.buildType=m.type;
+  });
+  return [...classState.tasks].sort((a,b)=>b.score-a.score);
+}
+function classSummary(){
+  const r=calcClass().slice(0,3);
+  return `[차팀장 AI 업무 시스템 심층진단]
+
+일하는 방식: ${classState.workType}
+업종/업무: ${classState.industry}
+팀 규모: ${classState.team}
+주요 고객: ${classState.customer||'-'}
+
+AI 직원 TOP3
+${r.map((t,i)=>{const m=deepMetrics(t);return `${i+1}. ${t.name} / 우선순위 ${m.priority}점 / 효과 ${m.impact} / 준비도 ${m.readiness} / 검수부담 ${burdenLabel(m.reviewBurden)} / ${m.type.split(' ·')[0]}`}).join('\n')}
+
+1순위 선정 이유
+- ${r[0]?whyRank(r[0]):'-'}
+
+1순위에서 먼저 보완할 것
+- ${r[0]?bottleneck(r[0]):'-'}
+
+집중반에서 확인할 것
+- 필요한 입력자료
+- 내가 직접 판단하는 기준
+- 사람이 승인할 지점
+- 결과 저장 위치와 다음 행동`;
+}
+function goNext(){
+  if(mode==='free'){
+    if(freeState.step===1){if(!freeState.workType)return;freeState.step=2;}
+    else if(freeState.step===2){const v=$('#job').value.trim();if(!v)return;freeState.job=v;freeState.step=3;}
+    else if(freeState.step===3){if(freeState.tasks.length<1)return;freeState.step=4;freeState.ti=0;freeState.qi=0;}
+    else if(freeState.step===4){
+      const t=freeState.tasks[freeState.ti],q=freeQs[freeState.qi];if(!t.s[q.k])return;
+      if(freeState.qi<freeQs.length-1)freeState.qi++;
+      else if(freeState.ti<freeState.tasks.length-1){freeState.ti++;freeState.qi=0;}
+      else freeState.step=5;
+    }
+    render();return;
+  }
+  if(mode==='class'){
+    if(classState.step===1){if(!classState.workType)return;classState.step=2;}
+    else if(classState.step===2){const v=$('#industry').value.trim();if(!v)return;classState.industry=v;classState.step=3;}
+    else if(classState.step===3){if(!classState.team)return;classState.step=4;}
+    else if(classState.step===4){classState.customer=$('#customer').value.trim();classState.step=5;}
+    else if(classState.step===5){if(classState.tasks.length<minClassTasks())return;classState.step=6;classState.ti=0;classState.qi=0;}
+    else if(classState.step===6){
+      const t=classState.tasks[classState.ti],qList=classQuestionList(t),q=qList[classState.qi];if(!q||!t.s[q.k])return;
+      if(classState.qi<qList.length-1)classState.qi++;
+      else if(classState.ti<classState.tasks.length-1){classState.ti++;classState.qi=0;}
+      else classState.step=7;
+    }
+    render();
+  }
+}
+function goBack(){
+  if(mode==='free'){
+    if(freeState.step===1)freeState.step=0;
+    else if(freeState.step===2)freeState.step=1;
+    else if(freeState.step===3)freeState.step=2;
+    else if(freeState.step===4){
+      if(freeState.qi>0)freeState.qi--;
+      else if(freeState.ti>0){freeState.ti--;freeState.qi=freeQs.length-1;}
+      else freeState.step=3;
+    }else if(freeState.step===5){freeState.step=4;freeState.ti=freeState.tasks.length-1;freeState.qi=freeQs.length-1;}
+    else location.hash='';
+  }else{
+    if(classState.step===1)classState.step=0;
+    else if(classState.step===2)classState.step=1;
+    else if(classState.step===3)classState.step=classState.inheritedFromFree?0:2;
+    else if(classState.step===4)classState.step=3;
+    else if(classState.step===5)classState.step=4;
+    else if(classState.step===6){
+      if(classState.qi>0)classState.qi--;
+      else if(classState.ti>0){
+        classState.ti--;
+        classState.qi=classQuestionList(classState.tasks[classState.ti]).length-1;
+      }
+      else classState.step=5;
+    }else if(classState.step===7){
+      classState.step=6;
+      classState.ti=classState.tasks.length-1;
+      classState.qi=classQuestionList(classState.tasks[classState.ti]).length-1;
+    }
+  }
+  render();
+}
+function toggleFreeTask(v){
+  const i=freeState.tasks.findIndex(t=>t.name===v);
+  if(i>=0){freeState.tasks.splice(i,1);}
+  else{
+    if(freeState.tasks.length>=5){toast('빠른 진단은 최대 5개 업무까지 비교할 수 있어요.');return;}
+    freeState.tasks.push({name:v,s:{}});
+  }
+  renderPreservingScroll();
+}
+function addFreeTask(){
+  const el=$('#freetaskin'),v=el?.value.trim();
+  if(!v)return;
+  if(freeState.tasks.some(t=>t.name===v)){toast('이미 선택한 업무예요.');return;}
+  if(freeState.tasks.length>=5){toast('빠른 진단은 최대 5개 업무까지 비교할 수 있어요.');return;}
+  freeState.tasks.push({name:v,s:{}});
+  renderPreservingScroll();
+}
+function toggleTask(v){
+  const i=classState.tasks.findIndex(t=>t.name===v);
+  if(i>=0){classState.tasks.splice(i,1);}
+  else{
+    if(classState.tasks.length>=8){toast('업무는 최대 8개까지 선택할 수 있어요.');return;}
+    classState.tasks.push({name:v,s:{}});
+  }
+  renderPreservingScroll();
+}
+function addTask(){
+  const el=$('#taskin'),v=el?.value.trim();
+  if(!v)return;
+  if(classState.tasks.some(t=>t.name===v)){toast('이미 선택한 업무예요.');return;}
+  if(classState.tasks.length>=8){toast('업무는 최대 8개까지 선택할 수 있어요.');return;}
+  classState.tasks.push({name:v,s:{}});
+  renderPreservingScroll();
+}
+function route(){
+  const h=location.hash.replace('#','');
+  mode=h==='free'?'free':h==='class'?'class':'home';
+  render();
+}
+function render(){
+  if(mode==='home')home();
+  else if(mode==='free')renderFree();
+  else renderClass();
+  bindGlobal();
+  persist();
+}
+const brandHome=$('#brandHome');
+brandHome.onclick=()=>{location.hash='';};
+brandHome.onkeydown=e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();location.hash='';}};
+window.addEventListener('hashchange',route);
+route();
+</script>
+</body>
+</html>
